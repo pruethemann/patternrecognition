@@ -16,7 +16,8 @@ dependencies:
   - pytorch=1.2
   - matplotlib=3.1
   - jupyter=1.0
-  - scikit-learn
+  - scikit-learn=0.21
+  - torchvision=0.4
   - pip:
     - plyfile==0.7
 
