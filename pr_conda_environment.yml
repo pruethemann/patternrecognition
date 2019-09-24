@@ -18,6 +18,7 @@ dependencies:
   - jupyter=1.0
   - scikit-learn=0.21
   - torchvision=0.4
+  - scikit-image=0.15
+  - torchtext=0.4
   - pip:
     - plyfile==0.7
-
