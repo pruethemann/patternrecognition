@@ -15,52 +15,100 @@ dataPath = '../data/'
 # Manual implementation of maximum likelihood for a 2D toy dataset
 
 def calculate_sample_mean(data: np.ndarray) -> np.ndarray:
-    # TODO: EXERCISE 2 - Compute the sample mean of a data array (2D vector output)
-    mean = None
+    # EXERCISE 2 - Compute the sample mean of a data array (2D vector output)
+    mean = np.array([[0.0],[0.0]])    
     d, n = np.shape(data)
-    # remove the labels
-    mean = np.zeros((d,))
+
+    for c in range(n):
+        mean[0] += data[0][c]
+        mean[1] += data[1][c]
+
+    mean = mean / n
     return mean
 
 
 def calculate_sample_covariance_matrix(data: np.ndarray, mean: np.ndarray) -> np.ndarray:
-    # TODO: EXERCISE 2 - Compute the sample covariance matrix
-    cov_matrix = None
+    # EXERCISE 2 - Compute the sample covariance matrix
+    d, n = np.shape(data)
+    
+    sigma1 = 0
+    sigma2 = 0
+
+    for c in range(n):
+        sigma1 += (data[0][c] - mean[0])**2
+        sigma2 += (data[1][c] - mean[1])**2
+    cov_matrix = np.array([[sigma1[0], 0.0],[0.0, sigma2[0]]])    
+    cov_matrix /= n
     return cov_matrix
 
 
 def matrix2dDeterminant(mat: np.ndarray) -> float:
-    # TODO: EXERCISE 2 - Compute the determinant value of a 2x2 matrix
-    matrix_determinant = None
+    # EXERCISE 2 - Compute the determinant value of a 2x2 matrix
+    matrix_determinant = mat[0][0] * mat[1][1] - (mat[0][1] * mat[1][0])
     return matrix_determinant
 
 
 def matrix2dInverse(mat: np.ndarray) -> np.ndarray:
-    # TODO: EXERCISE 2 - Compute the inverse matrix of a 2x2 matrix
-    matrix_inverse = None
+    # EXERCISE 2 - Compute the inverse matrix of a 2x2 matrix
+    det = matrix2dDeterminant(mat)
+    a = mat[0][0]
+
+    mat[1][0] = -1*mat[1][0]
+    mat[0][1] = -1*mat[0][1] 
+    mat[0][0] = mat[1][1]
+    mat[1][1] = a
+    
+    matrix_inverse = 1/det * mat 
     return matrix_inverse
 
 
 def pdf(x: np.array, mean: np.ndarray, cov: np.ndarray) -> float:
-    # TODO: EXERCISE 2 - Implement PDF function for a 2D multivariate normal distribution (MVND)
+    # EXERCISE 2 - Implement PDF function for a 2D multivariate normal distribution (MVND)
     assert x.shape == mean.shape
-    probability = None
+    inv = matrix2dInverse(cov)
+    det = matrix2dDeterminant(cov)
+
+    mult_one = np.dot(np.transpose(x - mean) , inv)
+    mult_two = np.dot( mult_one , x-mean)   
+
+    probability = 1/np.sqrt(4*np.pi**2 * det) * np.exp(-0.5 * mult_two[0][0])
+
     return probability
 
 
 def classification(x: np.ndarray, mean_class0: np.ndarray, cov_class0: np.ndarray,
                    mean_class1: np.ndarray, cov_class1: np.ndarray) -> bool:
-    # TODO: EXERCISE 2 - Implement classification function of a point into one of 2 MVND
-    # Return 1 if class 1 and 0 if class 0.
-    assigned_class = None
+    # EXERCISE 2 - Implement classification function of a point into one of 2 MVND
+    # Todo: Fix dirty tranpose
+    x = np.array([[x[0]],[x[1]]])
+
+    # Mahalanobis Distance
+    sigma0_inv = matrix2dInverse(cov_class0)
+    sigma1_inv = matrix2dInverse(cov_class1)   
+    
+    mult0_one = np.dot(np.transpose(x - mean_class0) , sigma0_inv)
+    mult0_two = np.dot(mult0_one, (x - mean_class0) )
+    d0 = mult0_two[0][0]
+    
+    mult1_one = np.dot(np.transpose(x - mean_class1) , sigma1_inv)
+    mult1_two = np.dot( mult1_one , (x - mean_class1) )
+    d1 = mult1_two[0][0]
+
+    # Return 1 if class 1 and 0 if class 0.    
+    if d0 < d1:
+        assigned_class = 0
+    else:
+        assigned_class = 1   
+
     return assigned_class
 
 
 def box_muller_transform(unif1: float, unif2: float) -> (float, float):
-    # TODO: EXERCISE 2 - Implement sampling from a standard normal distribution
+    # EXERCISE 2 - Implement sampling from a standard normal distribution
     # Transforms 2 uniform samples into 2 random samples from a standard normal distribution N(0,1)
-    rnd1 = None
-    rnd2 = None
+    rnd1 = np.sqrt(-2 * np.log(unif1)) * np.cos(2*np.pi*unif2)
+    rnd2 = np.sqrt(-2 * np.log(unif1)) * np.sin(2*np.pi*unif2)
+
     return (rnd1, rnd2)
 
 
@@ -72,12 +120,17 @@ def cholesky_factor_2d(mat: np.ndarray) -> np.ndarray:
     assert d == n and n == 2
     assert mat[0, 1] - mat[1, 0] < 1e-5
 
-    L = None
+    a = np.sqrt(mat[0][0])
+    b = 1/a * mat[1][0]
+    c = 0
+    L1 = np.array([[a,0],[b,c]])
+    L = np.linalg.cholesky(np.matrix(mat))
+
     return L
 
 
 def sample_from_2d_gaussian(mean: np.ndarray, cov: np.ndarray) -> np.ndarray:
-    # TODO: EXERCISE 2 - Implement sampling from MVND
+    # EXERCISE 2 - Implement sampling from MVND
     # Sample a random 2D vector from a normal distribution with given mean and covariance matrix
     # Step1: Sample two uniform random values
     random_number_uniform_1 = np.random.random()
@@ -86,7 +139,12 @@ def sample_from_2d_gaussian(mean: np.ndarray, cov: np.ndarray) -> np.ndarray:
     # using the box_muller_transform
     (rnd1, rnd2) = box_muller_transform(random_number_uniform_1, random_number_uniform_2)
 
-    sample = np.zeros((mean.shape))
+    # perform cholesky
+    L = cholesky_factor_2d(cov)
+    z = np.array([[rnd1],[rnd2]])
+
+    sample = np.dot(L, z) + mean
+
     # Convert the normal samples into a 2D sample from a MVND with the provided mean and covariance matrix
     return sample
 
@@ -123,7 +181,9 @@ def print_classification(data: np.ndarray, labels: np.ndarray, class0_mean: np.n
 def plot_cov(ax: plt.axes, mean: np.ndarray, cov_matrix: np.ndarray, color: str) -> None:
     # Helper function to visualize the distribution
     vals, vecs = np.linalg.eigh(cov_matrix)
+    print(vals)
     x, y = vecs[:, 0]
+
     theta = np.degrees(np.arctan2(y, x))
     w, h = 2 * np.sqrt(vals)
     ax.add_artist(Ellipse(mean, w, h, theta, color=color, alpha=0.3))
@@ -134,6 +194,7 @@ if __name__ == '__main__':
     data_test = scio.loadmat(os.path.join(dataPath, 'mle_toy_test.mat'))
 
     class0_training_data = data_train['omega_1']
+    
     class0_training_labels = np.zeros((1, np.shape(class0_training_data)[1]))
     class1_training_data = data_train['omega_2']
     class1_training_labels = np.ones((1, np.shape(class1_training_data)[1]))
