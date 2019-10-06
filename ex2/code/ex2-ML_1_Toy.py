@@ -128,7 +128,7 @@ def box_muller_transform(unif1: float, unif2: float) -> (float, float):
 
 
 def cholesky_factor_2d(mat: np.ndarray) -> np.ndarray:
-    # TODO: EXERCISE 2 - Compute the cholesky decomposition of a 2x2 matrix
+    # EXERCISE 2 - Compute the cholesky decomposition of a 2x2 matrix
     d, n = np.shape(mat)
     # should only be applied to quadratic 2x2 matrices matrices
     # the matrix should be symmetric
