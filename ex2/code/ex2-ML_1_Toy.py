@@ -135,16 +135,26 @@ def cholesky_factor_2d(mat: np.ndarray) -> np.ndarray:
     assert d == n and n == 2
     assert mat[0, 1] - mat[1, 0] < 1e-5
     
-    # compare with np function
-    #L = np.linalg.cholesky(np.matrix(mat))
-
-    L = np.zeros((n,n))
-    ## cholesky deposition
-    for i, (Ai, Li) in enumerate(zip(mat, L)):
-        for j, Lj in enumerate(L[:i+1]):
-            s = sum(Li[k] * Lj[k] for k in range(j))
-            Li[j] = np.sqrt(Ai[i] - s) if (i == j) else \
-                      (1.0 / Lj[j] * (Ai[j] - s))    
+    ## General cholesky decomposition
+ #   L = np.zeros((n,n))
+#    for i, (Ai, Li) in enumerate(zip(mat, L)):
+#        for j, Lj in enumerate(L[:i+1]):
+#            s = sum(Li[k] * Lj[k] for k in range(j))
+#            Li[j] = np.sqrt(Ai[i] - s) if (i == j) else \
+#                      (1.0 / Lj[j] * (Ai[j] - s))    
+    
+    ## Cholesky decomposition for 2x2
+    l11 = np.sqrt(mat[0][0])
+    l12 = mat[1][0] / l11
+    l21 = mat[0][1] / l11
+    l22 = np.sqrt( mat[1][1] - l21 * l12  )
+    
+    L = np.zeros((2,2))
+    
+    L[0][0] = l11
+    L[1][0] = l12
+    L[1][1] = l22
+    
     return L
 
 

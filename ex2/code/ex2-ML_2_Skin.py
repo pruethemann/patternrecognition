@@ -25,8 +25,6 @@ def mvndSkinDetection() -> None:
     mvn_sskin = [MVND(sdata)]
     mvn_nskin = [MVND(ndata)]
     
-    
-    
     # Optain priors
     mask = imageHelper()
     mask.loadImageFromFile(os.path.join(dataPath, 'mask.png'))
@@ -38,6 +36,8 @@ def mvndSkinDetection() -> None:
     trainingmaskObj.loadImageFromFile(os.path.join(dataPath, 'mask.png'))
     trainingimageObj = imageHelper()
     trainingimageObj.loadImageFromFile(os.path.join(dataPath, 'image.png'))
+    
+    # (img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin_mvnd: List[MVND], fig: str = "", prior_skin: float = 0.5, prior_nonskin: float = 0.5)
     classify(trainingimageObj, trainingmaskObj, mvn_sskin, mvn_nskin, "Training", prior_skin, prior_nonskin)
 
     print("TEST DATA")

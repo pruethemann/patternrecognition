@@ -4,14 +4,16 @@ from scipy.stats import multivariate_normal
 
 class MVND:
     
-    # TODO: EXERCISE 2 - Implement mean and covariance matrix of given data
+    # EXERCISE 2 - Implement mean and covariance matrix of given data
     def __init__(self, data: np.ndarray, c: float = 1.0):
         self.c = c  # Mixing coefficients. The sum of all mixing coefficients = 1.0.
         self.data = data
         self.mean = self.calculate_mean(data)
         self.cov  = np.cov(data)
+        print("HIERE")
+        print(self.cov)
 
-    # TODO: EXERCISE 2 - Implement pdf and logpdf of a MVND
+    # EXERCISE 2 - Implement pdf and logpdf of a MVND
     def pdf(self, x: np.ndarray) -> float:       
        return multivariate_normal.pdf(x, self.mean, self.cov)
 
@@ -23,14 +25,6 @@ class MVND:
         
         mean = np.zeros((ds,1))
         for d in range(ds):
-            mean[d] = np.mean(data[d])
-            
-        print(np.mean(data))
+            mean[d] = np.mean(data[d])            
         
-        print(mean)
-            
         return mean
-
-
-        
-

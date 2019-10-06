@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from imageHelper import imageHelper
 from myMVND import MVND
 from typing import List
+## own import
+from scipy.spatial import distance
 
 
 def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
@@ -15,10 +17,13 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
     :return:        Likelihood of each data point
     '''
     likelihood = np.zeros((1, data.shape[0]))
+
     # TODO: EXERCISE 2 - Compute likelihood of data
     # Note: For MVGD there will only be 1 item in the list
     for g in gmm:
-      likelihood = 0
+        print("@@@@@@@@@@")
+        print(g.cov)
+        likelihood = distance.mahalanobis(data, np.mean(data), np.linalg.inv(np.cov(data)))
 
     return likelihood
 
@@ -26,11 +31,8 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
 def get_prior(mask: imageHelper) -> (float, float):
     [N, M] = mask.shape
     image_mask = mask.image[:]
-    # EXERCISE 2 - Compute the skin and nonskin prior
-    print("###############################")
-    print(N,M)
-    print(image_mask)
-    ## skin is 0 / non-skin is 1
+    # EXERCISE 2 - Compute the skin 0 and nonskin 1 prior
+
     # count all skin pixels
     skin = 0
     for n in range(N):
