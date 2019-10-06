@@ -31,14 +31,29 @@ def calculate_sample_covariance_matrix(data: np.ndarray, mean: np.ndarray) -> np
     # EXERCISE 2 - Compute the sample covariance matrix
     d, n = np.shape(data)
     
+    ## Init variance and difference x - mu for every both datasets
     sigma1 = 0
     sigma2 = 0
+    diff1 = 0
+    diff2 = 0
+    covariance = 0
 
     for c in range(n):
-        sigma1 += (data[0][c] - mean[0])**2
-        sigma2 += (data[1][c] - mean[1])**2
-    cov_matrix = np.array([[sigma1[0], 0.0],[0.0, sigma2[0]]])    
-    cov_matrix /= n
+        diff1 = data[0][c] - mean[0]
+        diff2 = data[1][c] - mean[1]
+        covariance += diff1 * diff2   ## sum together the product between differences in dataset from mu
+        sigma1 += diff1**2
+        sigma2 += diff2**2
+
+    ## ToDO recheck whether it's really n or n-1 instead
+    # normalize covariance and variance
+    covariance /= n 
+    sigma1 = sigma1[0] /(n) 
+    sigma2 = sigma2[0] /(n) 
+
+    ## init covariance matrix
+    cov_matrix = np.array([[sigma1, covariance],[covariance, sigma2]])    
+
     return cov_matrix
 
 
