@@ -134,13 +134,17 @@ def cholesky_factor_2d(mat: np.ndarray) -> np.ndarray:
     # the matrix should be symmetric
     assert d == n and n == 2
     assert mat[0, 1] - mat[1, 0] < 1e-5
+    
+    # compare with np function
+    #L = np.linalg.cholesky(np.matrix(mat))
 
-    a = np.sqrt(mat[0][0])
-    b = 1/a * mat[1][0]
-    c = 0
-    L1 = np.array([[a,0],[b,c]])
-    L = np.linalg.cholesky(np.matrix(mat))
-
+    L = np.zeros((n,n))
+    ## cholesky deposition
+    for i, (Ai, Li) in enumerate(zip(mat, L)):
+        for j, Lj in enumerate(L[:i+1]):
+            s = sum(Li[k] * Lj[k] for k in range(j))
+            Li[j] = np.sqrt(Ai[i] - s) if (i == j) else \
+                      (1.0 / Lj[j] * (Ai[j] - s))    
     return L
 
 
