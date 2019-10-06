@@ -18,7 +18,7 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
     # TODO: EXERCISE 2 - Compute likelihood of data
     # Note: For MVGD there will only be 1 item in the list
     for g in gmm:
-      likelihood = ???
+      likelihood = 0
 
     return likelihood
 
@@ -58,9 +58,9 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     skin = (likelihood_rgb > 0).astype(int)
     imgMinMask = skin - testmask
     # TODO: EXERCISE 2 - Error Rate without prior
-    fp = ???
-    fn = ???
-    totalError = ???
+    fp = 0
+    fn = 0
+    totalError = 0
 
     print('----- ----- -----')
     print('Total Error WITHOUT Prior =', totalError)
@@ -68,12 +68,12 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     print('false negative rate =', fn)
 
     # TODO: EXERCISE 2 - Error Rate with prior
-    likelihood_rgb_with_prior = ???
-    skin_prior = ???
-    imgMinMask_prior = ???
-    fp_prior = ???
-    fn_prior = ???
-    totalError_prior = ???
+    likelihood_rgb_with_prior = 0
+    skin_prior = 0
+    imgMinMask_prior = 0
+    fp_prior = 0
+    fn_prior = 0
+    totalError_prior = 0
     print('----- ----- -----')
     print('Total Error WITH Prior =', totalError_prior)
     print('false positive rate =', fp_prior)

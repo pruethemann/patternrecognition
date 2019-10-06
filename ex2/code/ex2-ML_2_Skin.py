@@ -21,9 +21,12 @@ def mvndSkinDetection() -> None:
     '''
     sdata = scipy.io.loadmat(os.path.join(dataPath, 'skin.mat'))['sdata']
     ndata = scipy.io.loadmat(os.path.join(dataPath, 'nonskin.mat'))['ndata']
-
+    
     mvn_sskin = [MVND(sdata)]
     mvn_nskin = [MVND(ndata)]
+    
+    
+    
     # Optain priors
     mask = imageHelper()
     mask.loadImageFromFile(os.path.join(dataPath, 'mask.png'))
