@@ -93,35 +93,32 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     testmask = mask.getLinearImageBinary().astype(int)[:, 0]
     npixels = len(testmask)
     
-    ################################ vergleich
-    print("vergleich")
-
-            
-        
-    print("counter: ", counter, " of total: ", N, " % ", counter/N * 100)
+    likelihood_rgb = likelihood_of_skin_rgb - likelihood_of_nonskin_rgb    
     
-    likelihood_rgb = likelihood_of_skin_rgb - likelihood_of_nonskin_rgb
-    
-    
-    skin = (likelihood_rgb > 0).astype(int)
-    
+    skin = (likelihood_rgb > 0).astype(int)    
     
     imgMinMask = skin - testmask
+
     # TODO: EXERCISE 2 - Error Rate without prior
     fp = 0 # false positive. Pixels classified as skin but should be nonskin
     fn = 0 # false negative. Pixel classified as non-skin but should be skin
     totalError = 0
 
+    ## check every pixel
     for i in range(N):
-        #print(testmask[i], "   ", prediction[i])
-        if testmask[i] != prediction[i]:
-            counter+= 1
-
+        if testmask[i] == 1 and int(prediction[i]) == 0:
+            fp += 1
+        if testmask[i] == 0 and int(prediction[i]) == 1:
+            fn += 1            
+    
+    totalError = (fp + fn)/N
+    fp /= N
+    fn /= N
 
     print('----- ----- -----')
-    print('Total Error WITHOUT Prior =', totalError)
-    print('false positive rate =', fp)
-    print('false negative rate =', fn)
+    print('Total Error WITHOUT Prior =', round(totalError,2))
+    print('false positive rate =', round(fp,2))
+    print('false negative rate =', round(fn,2))
 
     # TODO: EXERCISE 2 - Error Rate with prior
     likelihood_rgb_with_prior = .1
