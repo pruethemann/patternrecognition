@@ -8,7 +8,7 @@ from typing import List
 from scipy.spatial import distance
 
 
-def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
+def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> np.ndarray:
     '''
     Compute the likelihood of each datapoint
     Hint: Use logpdf and add likelihoods instead of multiplication of pdf's
@@ -17,13 +17,15 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> float:
     :return:        Likelihood of each data point
     '''
     likelihood = np.zeros((1, data.shape[0]))
+    likelihood = 0
+    
+    N, M = np.shape(data)
+    N = data.shape[0]
 
     # TODO: EXERCISE 2 - Compute likelihood of data
     # Note: For MVGD there will only be 1 item in the list
     for g in gmm:
-        print("@@@@@@@@@@")
-        print(g.cov)
-        likelihood = distance.mahalanobis(data, np.mean(data), np.linalg.inv(np.cov(data)))
+        likelihood = g.logpdf(data)
 
     return likelihood
 
@@ -53,8 +55,8 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     '''
     :param img:             imageHelper object containing the image to be classified
     :param mask:            imageHelper object containing the ground truth mask
-    :param skin_mvnd:            MVND object for the skin class
-    :param notSkin_mvnd:            MVND object for the non-skin class
+    :param skin_mvnd:       MVND object for the skin class
+    :param notSkin_mvnd:    MVND object for the non-skin class
     :param fig:             Optional figure name
     :param prior_skin:      skin prior, float (0.0-1.0)
     :param prior_nonskin:   nonskin prior, float (0.0-1.0)
@@ -72,6 +74,8 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
 
     likelihood_rgb = likelihood_of_skin_rgb - likelihood_of_nonskin_rgb
     skin = (likelihood_rgb > 0).astype(int)
+    
+    
     imgMinMask = skin - testmask
     # TODO: EXERCISE 2 - Error Rate without prior
     fp = 0
