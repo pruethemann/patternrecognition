@@ -22,6 +22,7 @@ def mvndSkinDetection() -> None:
     sdata = scipy.io.loadmat(os.path.join(dataPath, 'skin.mat'))['sdata']
     ndata = scipy.io.loadmat(os.path.join(dataPath, 'nonskin.mat'))['ndata']
     
+    ## Multivariate Gaussian for skin and non-skin
     mvn_sskin = [MVND(sdata)]
     mvn_nskin = [MVND(ndata)]
     
@@ -39,6 +40,9 @@ def mvndSkinDetection() -> None:
     
     # (img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin_mvnd: List[MVND], fig: str = "", prior_skin: float = 0.5, prior_nonskin: float = 0.5)
     classify(trainingimageObj, trainingmaskObj, mvn_sskin, mvn_nskin, "Training", prior_skin, prior_nonskin)
+
+    
+
 
     print("TEST DATA")
     testmaskObj = imageHelper()
