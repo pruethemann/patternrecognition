@@ -115,9 +115,10 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     print('false negative rate =', round(fn,2))
 
     # TODO: EXERCISE 2 - Error Rate with prior
-    likelihood_rgb_with_prior = 0
-    skin_prior = 0
-    imgMinMask_prior = 0
+    likelihood_rgb_with_prior = likelihood_of_skin_rgb
+    skin_prior = prior_skin * likelihood_of_skin_rgb
+    # fix
+    imgMinMask_prior = skin - testmask
     fp_prior = 0
     fn_prior = 0
     totalError_prior = 0
@@ -131,6 +132,7 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     M = mask.M
     fpImage = np.reshape((imgMinMask > 0).astype(float), (N, M))
     fnImage = np.reshape((imgMinMask < 0).astype(float), (N, M))
+    
     fpImagePrior = np.reshape((imgMinMask_prior > 0).astype(float), (N, M))
     fnImagePrior = np.reshape((imgMinMask_prior < 0).astype(float), (N, M))
     prediction = imageHelper()
