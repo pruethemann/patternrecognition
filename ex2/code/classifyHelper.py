@@ -93,17 +93,19 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     
     imgMinMask = skin - testmask
 
-    # TODO: EXERCISE 2 - Error Rate without prior
-    fp = 0 # false positive. Pixels classified as skin but should be nonskin
-    fn = 0 # false negative. Pixel classified as non-skin but should be skin
+    # EXERCISE 2 - Error Rate without prior
+    fp = 0 # false positive. Pixels classified as skin (1) but should be nonskin
+    fn = 0 # false negative. Pixel classified as non-skin (0) but should be skin
     totalError = 0
 
     ## check every pixel
     for i in range(N):
-        if testmask[i] == 1 and int(prediction[i]) == 0:
-            fp += 1
-        if testmask[i] == 0 and int(prediction[i]) == 1:
-            fn += 1            
+        # It's skin but predicted as non-skin
+        if testmask[i] == 1 and int(prediction[i]) == 0:  
+            fn += 1
+        # It's non-skin but predicted as skin
+        if testmask[i] == 0 and int(prediction[i]) == 1: 
+            fp += 1            
     
     totalError = (fp + fn)/N
     fp /= N
@@ -115,13 +117,34 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     print('false negative rate =', round(fn,2))
 
     # TODO: EXERCISE 2 - Error Rate with prior
-    likelihood_rgb_with_prior = likelihood_of_skin_rgb
-    skin_prior = prior_skin * likelihood_of_skin_rgb
+    
+    ## Defintin sum of product of liklehood * prior
+    likelihood_rgb_with_prior = 0
+    
+    for i in range(N):
+        likelihood_rgb_with_prior += np.exp(likelihood_rgb[0]) * prior_skin
+    
+    skin_prior = prior_skin * np.exp(likelihood_of_skin_rgb) / likelihood_rgb_with_prior
     # fix
-    imgMinMask_prior = skin - testmask
+    imgMinMask_prior = skin_prior - testmask
     fp_prior = 0
     fn_prior = 0
     totalError_prior = 0
+    
+    ## check every pixel
+    for i in range(N):
+        # It's skin but predicted as non-skin
+        if testmask[i] == 1 and int(skin_prior[i]) == 0:  
+            fn_prior += 1
+        # It's non-skin but predicted as skin
+        if testmask[i] == 0 and int(skin_prior[i]) == 1: 
+            fp_prior += 1            
+    
+    totalError = (fp_prior + fn_prior)/N
+    fp_prior /= N
+    fn_prior /= N
+       
+    
     print('----- ----- -----')
     print('Total Error WITH Prior =', totalError_prior)
     print('false positive rate =', fp_prior)

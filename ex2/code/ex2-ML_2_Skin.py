@@ -41,8 +41,6 @@ def mvndSkinDetection() -> None:
     # (img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin_mvnd: List[MVND], fig: str = "", prior_skin: float = 0.5, prior_nonskin: float = 0.5)
     classify(trainingimageObj, trainingmaskObj, mvn_sskin, mvn_nskin, "Training", prior_skin, prior_nonskin)
 
-    
-
 
     print("TEST DATA")
     testmaskObj = imageHelper()
