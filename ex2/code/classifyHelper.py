@@ -33,20 +33,14 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> np.ndarray:
 def get_prior(mask: imageHelper) -> (float, float):
     [N, M] = mask.shape
     image_mask = mask.image[:]
-    # EXERCISE 2 - Compute the skin 0 and nonskin 1 prior
-
-    # count all skin pixels
-    skin = 0
-    for n in range(N):
-        for m in range(M):
-            if image_mask[n][m] == 0:
-                skin += 1
+    # EXERCISE 2 - Compute the skin 0 and nonskin 1 prior   
+    # determine fraction of image              
+    prior_skin = image_mask[image_mask == 0]
     
-    # determine fraction of image        
-    pixels_count = N * M
-    prior_skin = skin/pixels_count
-    prior_nonskin = (pixels_count - skin) / pixels_count
-
+    (skin_pixel,) = prior_skin.shape
+    prior_skin = skin_pixel / (N*M)
+    prior_nonskin = 1 - prior_skin
+    
     return prior_skin, prior_nonskin
 
 
@@ -121,12 +115,12 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     print('false negative rate =', round(fn,2))
 
     # TODO: EXERCISE 2 - Error Rate with prior
-    likelihood_rgb_with_prior = .1
-    skin_prior = 0.1
-    imgMinMask_prior = .9
-    fp_prior = 0.2
-    fn_prior = 0.1
-    totalError_prior = 0.5
+    likelihood_rgb_with_prior = 0
+    skin_prior = 0
+    imgMinMask_prior = 0
+    fp_prior = 0
+    fn_prior = 0
+    totalError_prior = 0
     print('----- ----- -----')
     print('Total Error WITH Prior =', totalError_prior)
     print('false positive rate =', fp_prior)
