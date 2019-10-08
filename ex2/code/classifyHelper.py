@@ -107,14 +107,12 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
         if testmask[i] == 0 and int(prediction[i]) == 1: 
             fp += 1            
     
-    totalError = (fp + fn)/N
-    fp /= N
-    fn /= N
+    totalError = (fp + fn)
 
     print('----- ----- -----')
-    print('Total Error WITHOUT Prior =', round(totalError,2))
-    print('false positive rate =', round(fp,2))
-    print('false negative rate =', round(fn,2))
+    print('Total Error WITHOUT Prior =', totalError, " ", round(totalError/N,2))
+    print('false positive rate =', fp, " ",  round(fp/N,2))
+    print('false negative rate =', fn, " ", round(fn/N,2))
 
     # TODO: EXERCISE 2 - Error Rate with prior
     
@@ -140,15 +138,12 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
         if testmask[i] == 0 and int(skin_prior[i]) == 1: 
             fp_prior += 1            
     
-    totalError = (fp_prior + fn_prior)/N
-    fp_prior /= N
-    fn_prior /= N
-       
+    totalError_prior = fp_prior + fn_prior       
     
     print('----- ----- -----')
-    print('Total Error WITH Prior =', totalError_prior)
-    print('false positive rate =', fp_prior)
-    print('false negative rate =', fn_prior)
+    print('Total Error WITH Prior =', totalError_prior, " ", totalError_prior/N)
+    print('false positive rate =', fp_prior, " ", fp_prior/N)
+    print('false negative rate =', fn_prior, " ", fn_prior/N)
     print('----- ----- -----')
 
     N = mask.N
