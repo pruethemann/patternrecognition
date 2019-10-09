@@ -4,6 +4,7 @@ import scipy.io
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import random
 
 from numpy.linalg import inv
 from matplotlib.patches import Ellipse
@@ -67,10 +68,25 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     '''
     eps = sys.float_info.epsilon
     [d, N] = data.shape
-    gmm = []
+
     # TODO: EXERCISE 2 - Implement E and M step of GMM algorithm
-    # Hint - first randomly assign a cluster to each sample
+    # 1. Hint - first randomly assign a cluster to each sample
+    
+    ## randomly assign 3 different means between -4 - 8 and -4 and 4
+    gmm = []
+    for k in range(K):
+        c = MVND(data)
+        c.mean[0] = random.uniform(-4,4)
+        c.mean[1] = random.uniform(-4,4)
+        gmm.append(c)
+    
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
+    for i in range(2):
+
+        if(plot):
+            gmm_draw(gmm,data, "TOY")
+            plt.show()
+                   
     # Hint - use the gmm_draw() function to visualize each step
 
     plt.show()
@@ -124,5 +140,5 @@ if __name__ == "__main__":
     gmmToyExample()
     print("\nMVND exercise - Skin detection")
     print("##########-##########-##########")
-    gmmSkinDetection()
+    #gmmSkinDetection()
     print("##########-##########-##########")

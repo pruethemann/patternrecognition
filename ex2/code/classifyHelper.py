@@ -68,6 +68,8 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
         ## get likelihood for every pixel being non-skin
     likelihood_of_nonskin_rgb = log_likelihood(im_rgb_lin, notSkin_mvnd)
     
+    print(type(likelihood_of_skin_rgb))
+    
     (N,) = np.shape(likelihood_of_skin_rgb)
     
     ## prediction matrix. Classify into skin and non-skin
@@ -87,6 +89,7 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     testmask = mask.getLinearImageBinary().astype(int)[:, 0]
     npixels = len(testmask)
     
+    ## info: Prediction is the same as likelihood_rgb    
     likelihood_rgb = likelihood_of_skin_rgb - likelihood_of_nonskin_rgb    
     
     skin = (likelihood_rgb > 0).astype(int)    
