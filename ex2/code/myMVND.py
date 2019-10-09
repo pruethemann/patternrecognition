@@ -21,18 +21,10 @@ class MVND:
    
     ## calculates mean for every dimension / RGB
     def calculate_mean(self, data) -> np.ndarray:
-        dim, n = np.shape(data)
-        
-        mean = np.zeros((dim,1))
-
-        for d in range(dim):
-            mean[d][0] = np.mean(data[d])            
-
-        # Dirty hack
-        RGB = np.zeros(3)
-        RGB[0] = mean[0] #R
-        RGB[1] = mean[1] #G
-        RGB[2] = mean[2] #B
-        mean = RGB
-        
+        N,s = data.shape
+     
+        mean = np.zeros(N)
+        for dim in range(N):
+            mean[dim] = np.mean(data[dim])        
+    
         return mean
