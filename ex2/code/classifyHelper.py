@@ -100,18 +100,20 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     print('false positive rate =', fp, " ",  round(fp/npixels,3))
     print('false negative rate =', fn, " ", round(fn/npixels,3))
 
+    #############################################
     # TODO: EXERCISE 2 - Error Rate with prior
+    #############################################    
     
-    ## Marginal
-    likelihood_rgb_with_prior = 0
-#    
-    for i in range(npixels):
-        likelihood_rgb_with_prior += np.exp(likelihood_rgb[0]) * prior_skin
-#    
-    skin_prior = prior_skin * np.exp(likelihood_of_skin_rgb) / likelihood_rgb_with_prior
-    #♥skin_prior = prior_skin * np.exp(likelihood_of_skin_rgb) / prior_nonskin
-#    print(likelihood_rgb_with_prior)
-    # fix
+    ##POSTERIOR = (LIKELIHOOD · PRIOR) / EVIDENCE
+    evidence = np.exp(likelihood_of_skin_rgb) * prior_skin + np.exp(likelihood_of_nonskin_rgb) * prior_nonskin
+    posterior_skin = np.exp(likelihood_of_skin_rgb) * prior_skin / evidence
+    
+    posterior_nonskin = np.exp(likelihood_of_nonskin_rgb) * prior_nonskin / evidence
+    
+    posterior = posterior_skin - posterior_nonskin    
+    ## Classification. If value larger than 0 it's skin. And get's classified with 1
+    skin_prior = (posterior > 0).astype(int)  
+    
     imgMinMask_prior = skin_prior - testmask
     fp_prior = 0
     fn_prior = 0
@@ -129,9 +131,9 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     totalError_prior = fp_prior + fn_prior       
     
     print('----- ----- -----')
-    print('Total Error WITH Prior =', totalError_prior, " ", totalError_prior/npixels)
-    print('false positive rate =', fp_prior, " ", fp_prior/npixels)
-    print('false negative rate =', fn_prior, " ", fn_prior/npixels)
+    print('Total Error WITH Prior =', totalError_prior, " ", round(totalError_prior/npixels,3))
+    print('false positive rate =', fp_prior, " ", round(fp_prior/npixels,3))
+    print('false negative rate =', fn_prior, " ", round(fn_prior/npixels,3))
     print('----- ----- -----')
 
     N = mask.N
