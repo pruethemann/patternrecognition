@@ -67,30 +67,15 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     likelihood_of_skin_rgb = log_likelihood(im_rgb_lin, skin_mvnd)
         ## get likelihood for every pixel being non-skin
     likelihood_of_nonskin_rgb = log_likelihood(im_rgb_lin, notSkin_mvnd)
-    
-    (N,) = np.shape(likelihood_of_skin_rgb)
-    
-    ## prediction matrix. Classify into skin and non-skin
-    prediction = np.zeros(N)
-    
-    for n in range(N):
-        lskin = likelihood_of_skin_rgb[n]
-        lnskin = likelihood_of_nonskin_rgb[n]
-        
-        ## Bayes classifier
-        if lskin > lnskin:
-            prediction[n] = 1
-        else:
-            prediction[n] = 0
 
     # Truth: 0 for skin, 1 for non-skin
     testmask = mask.getLinearImageBinary().astype(int)[:, 0]
     npixels = len(testmask)
     
-    ## info: Prediction is the same as likelihood_rgb    
+    ## Bayes classification. liklehood is positive if more proable to be skin   
     likelihood_rgb = likelihood_of_skin_rgb - likelihood_of_nonskin_rgb    
-    
-    skin = (likelihood_rgb > 0).astype(int)    
+    ## Classification. If value larger than 0 it's skin. And get's classified with 1
+    skin = (likelihood_rgb > 0).astype(int)  
     
     imgMinMask = skin - testmask
 
@@ -100,30 +85,32 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     totalError = 0
 
     ## check every pixel
-    for i in range(N):
-        # It's skin but predicted as non-skin
-        if testmask[i] == 1 and int(prediction[i]) == 0:  
+    for i in range(npixels):
+        # It's skin but predicted as non-skin: false negative
+        if testmask[i] == 1 and int(skin[i]) == 0:  
             fn += 1
-        # It's non-skin but predicted as skin
-        if testmask[i] == 0 and int(prediction[i]) == 1: 
+        # It's non-skin but predicted as skin: false positive
+        if testmask[i] == 0 and int(skin[i]) == 1: 
             fp += 1            
     
     totalError = (fp + fn)
 
     print('----- ----- -----')
-    print('Total Error WITHOUT Prior =', totalError, " ", round(totalError/N,2))
-    print('false positive rate =', fp, " ",  round(fp/N,2))
-    print('false negative rate =', fn, " ", round(fn/N,2))
+    print('Total Error WITHOUT Prior =', totalError, " ", round(totalError/npixels,3))
+    print('false positive rate =', fp, " ",  round(fp/npixels,3))
+    print('false negative rate =', fn, " ", round(fn/npixels,3))
 
     # TODO: EXERCISE 2 - Error Rate with prior
     
-    ## Defintin sum of product of liklehood * prior
+    ## Marginal
     likelihood_rgb_with_prior = 0
-    
-    for i in range(N):
+#    
+    for i in range(npixels):
         likelihood_rgb_with_prior += np.exp(likelihood_rgb[0]) * prior_skin
-    
+#    
     skin_prior = prior_skin * np.exp(likelihood_of_skin_rgb) / likelihood_rgb_with_prior
+    #♥skin_prior = prior_skin * np.exp(likelihood_of_skin_rgb) / prior_nonskin
+#    print(likelihood_rgb_with_prior)
     # fix
     imgMinMask_prior = skin_prior - testmask
     fp_prior = 0
@@ -131,7 +118,7 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     totalError_prior = 0
     
     ## check every pixel
-    for i in range(N):
+    for i in range(npixels):
         # It's skin but predicted as non-skin
         if testmask[i] == 1 and int(skin_prior[i]) == 0:  
             fn_prior += 1
@@ -142,9 +129,9 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     totalError_prior = fp_prior + fn_prior       
     
     print('----- ----- -----')
-    print('Total Error WITH Prior =', totalError_prior, " ", totalError_prior/N)
-    print('false positive rate =', fp_prior, " ", fp_prior/N)
-    print('false negative rate =', fn_prior, " ", fn_prior/N)
+    print('Total Error WITH Prior =', totalError_prior, " ", totalError_prior/npixels)
+    print('false positive rate =', fp_prior, " ", fp_prior/npixels)
+    print('false negative rate =', fn_prior, " ", fn_prior/npixels)
     print('----- ----- -----')
 
     N = mask.N
@@ -183,11 +170,11 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     plt.subplot(4, 5, 5)
     plt.imshow(fpImage, cmap='gray')
     plt.axis('off')
-    plt.title('FalsePositive')
+    plt.title('FalsePositive Without Prior')
     plt.subplot(4, 5, 10)
     plt.imshow(fnImage, cmap='gray')
     plt.axis('off')
-    plt.title('FalseNegative')
+    plt.title('FalseNegative Without Prior')
     plt.subplot(4, 5, 15)
     plt.imshow(fpImagePrior, cmap='gray')
     plt.axis('off')

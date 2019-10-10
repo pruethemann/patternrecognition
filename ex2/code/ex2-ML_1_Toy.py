@@ -53,7 +53,6 @@ def calculate_sample_covariance_matrix(data: np.ndarray, mean: np.ndarray) -> np
 
     ## init covariance matrix
     cov_matrix = np.array([[sigma1, covariance],[covariance, sigma2]])    
-
     return cov_matrix
 
 
