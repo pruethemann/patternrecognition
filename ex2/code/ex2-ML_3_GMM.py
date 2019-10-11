@@ -89,19 +89,20 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     gmm_draw(gmm,data, "TOY")
     plt.show()
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
-    for i in range(10):     
+    for i in range(iter):     
         likelihood, wp1, wp2, wp3 = e_step(loglike, data, N, gmm)
         #m_step(gmm, wp1, wp2, wp3)
         clusters = optimize(wp1,wp2,wp3)
         gmm = calculate_mean(gmm,clusters, data)
         if(plot):
-            
             gmm_draw(gmm,data, "TOY")
             plt.show()
-                   
-    # Hint - use the gmm_draw() function to visualize each step
-
-    plt.show()
+    
+    ## shows means
+    print("Means:")
+    for i,g in enumerate(gmm):
+        print("Cluster ", i, ": ", g.mean)
+        print("Cov: \n", g.cov)
     return gmm
 
 def e_step(loglike, data, N, gmm):
@@ -123,11 +124,6 @@ def e_step(loglike, data, N, gmm):
 
     return loglike, c1, c2, c3
 
-def extract_X(data, col):
-    x = np.zeros((2,1))
-    x[0]= data[0][col]
-    x[1]= data[1][col]
-    return x
  
 def optimize(c1,c2,c3):
     clusters = np.zeros(200)
@@ -175,7 +171,7 @@ def calculate_mean(gmm,clusters, data):
     gmm[1].mean = gmm[1].calculate_mean(sum2)    
     gmm[2].mean = gmm[2].calculate_mean(sum3)    
 
-    gmm[0].cov =  np.cov(sum1)
+    gmm[0].cov = np.cov(sum1)
     gmm[1].cov = np.cov(sum2)
     gmm[2].cov = np.cov(sum3)    
     return gmm
