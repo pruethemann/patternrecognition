@@ -27,6 +27,7 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> np.ndarray:
     for g in gmm:
         likelihood = g.logpdf(data)
 
+
     return likelihood
 
 

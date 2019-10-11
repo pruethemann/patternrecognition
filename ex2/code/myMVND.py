@@ -16,8 +16,7 @@ class MVND:
        return multivariate_normal.pdf(x, self.mean, self.cov)
 
     def logpdf(self, x: np.ndarray) -> np.ndarray:
-        log = multivariate_normal.logpdf(x, self.mean, self.cov)
-        return log
+        return multivariate_normal.logpdf(x, self.mean, self.cov)
    
     ## calculates mean for every dimension / RGB
     def calculate_mean(self, data) -> np.ndarray:

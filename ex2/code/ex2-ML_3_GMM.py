@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import random
+from statistics import mean 
+
+import scipy as sp
 
 from numpy.linalg import inv
 from matplotlib.patches import Ellipse
@@ -74,16 +77,25 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     
     ## randomly assign 3 different means between -4 - 8 and -4 and 4
     gmm = []
+    liklehood = []
+    loglike= 0
     for k in range(K):
         c = MVND(data)
         c.mean[0] = random.uniform(-4,4)
         c.mean[1] = random.uniform(-4,4)
+        c.c = 1/3
         gmm.append(c)
-    
+        
+    gmm_draw(gmm,data, "TOY")
+    plt.show()
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
-    for i in range(2):
-
+    for i in range(10):     
+        likelihood, wp1, wp2, wp3 = e_step(loglike, data, N, gmm)
+        #m_step(gmm, wp1, wp2, wp3)
+        clusters = optimize(wp1,wp2,wp3)
+        gmm = calculate_mean(gmm,clusters, data)
         if(plot):
+            
             gmm_draw(gmm,data, "TOY")
             plt.show()
                    
@@ -92,6 +104,82 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     plt.show()
     return gmm
 
+def e_step(loglike, data, N, gmm):
+    ## extract X
+    
+    for n in range(1):
+        x = np.transpose(data)
+
+        c1 = gmm[0].pdf(x) * gmm[0].c
+        c2 = gmm[1].pdf(x)  * gmm[1].c
+        c3 = gmm[2].pdf(x) * gmm[2].c
+        den = c1 + c2 + c3
+
+        c1 /= den
+        c2 /= den
+        c3 /= den
+
+        loglike += np.log(c1 + c2 + c3)
+
+    return loglike, c1, c2, c3
+
+def extract_X(data, col):
+    x = np.zeros((2,1))
+    x[0]= data[0][col]
+    x[1]= data[1][col]
+    return x
+ 
+def optimize(c1,c2,c3):
+    clusters = np.zeros(200)
+    for i in range(200):
+        if c1[i] > c2[i] and c1[i] > c3[i]:
+            decision = 0
+        elif c2[i] > c1[i] and c2[i] > c3[i]:
+            decision = 1
+        else:
+            decision = 2
+        
+        clusters[i] = decision
+    return clusters
+        
+def calculate_mean(gmm,clusters, data):
+
+    c1 = np.where(clusters==0)[0] # Get indexes
+    c2 = np.where(clusters==1)[0] # Get indexes
+    c3 = np.where(clusters==2)[0] # Get indexes
+
+    (N1,) = c1.shape
+    (N2,) = c2.shape
+    (N3,) = c3.shape    
+    sum1 = np.zeros((2,N1))
+    sum2 = np.zeros((2,N2))    
+    sum3 = np.zeros((2,N3))
+
+    for col in range(N1):
+        index = c1[col]
+        sum1[0][col] = data[0][index]
+        sum1[1][col] = data[1][index]
+        
+    for col in range(N2):
+        index = c2[col]
+        sum2[0][col] = data[0][index]
+        sum2[1][col] = data[1][index]
+        
+        
+    for col in range(N3):
+        index = c3[col]
+        sum3[0][col] = data[0][index]
+        sum3[1][col] = data[1][index]
+
+    gmm[0].mean = gmm[0].calculate_mean(sum1)
+    gmm[1].mean = gmm[1].calculate_mean(sum2)    
+    gmm[2].mean = gmm[2].calculate_mean(sum3)    
+
+    gmm[0].cov =  np.cov(sum1)
+    gmm[1].cov = np.cov(sum2)
+    gmm[2].cov = np.cov(sum3)    
+    return gmm
+    
 
 def gmmToyExample() -> None:
     '''
