@@ -89,37 +89,46 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     gmm_draw(gmm,data, "TOY")
     plt.show()
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
-    for i in range(iter):     
-        likelihood, clusters = e_step(loglike, data, N, gmm, K)
+    log_before = -1000
+    iteration = 0
+    for i in range(iter):
+
+        clusters = e_step(data, N, gmm, K)
         #m_step(gmm, wp1, wp2, wp3)
         classification = maximize(clusters, K, N)
-        gmm = update_mean_cov(gmm, classification, data, K)
+        gmm, loglikelihoods = update_mean_cov(gmm, classification, data, K)
         if(plot):
             gmm_draw(gmm,data, "TOY")
             plt.show()
+            
+        ## check for convergence of liklehoods
+        if np.abs(np.sum(loglikelihoods) - log_before) < eps:
+            break
+        
+        log_before = np.sum(loglikelihoods)
+        iteration += 1
     
     ## shows means
-    print("Means:")
-    for i,g in enumerate(gmm):
-        print("Cluster ", i, ": ", g.mean)
-        print("Cov: \n", g.cov)
+    print("Converged in ", iteration, " iterations!")
+    i = 1
+    for g, log in zip(gmm,loglikelihoods):
+        print("Mean ", i, ": \n", g.mean)
+        print("Cov ", i, ": \n", g.cov)
+        print("Likelihood ", i,  ": \n", np.exp(log) ,"\n" )
+        i+=1
     return gmm
 
-def e_step(loglike, data, N, gmm, K):
+def e_step(data, N, gmm, K):
     ## extract X
     clusters = []
     x = np.transpose(data)
     for k in range(K):
         clusters.append( gmm[k].pdf(x) )# * gmm[0].c
-
 #        den = c1 + c2 + c3
 #        c1 /= den
 #        c2 /= den
 #        c3 /= den
-
-    loglike = 1
-
-    return loglike, clusters
+    return clusters
 
  
 def maximize(clusters, K, N):
@@ -137,7 +146,6 @@ def maximize(clusters, K, N):
     return classification
         
 def update_mean_cov(gmm, classification, data, K):
-
     ## Create K arrays with the indexes of the highest probability
     clusters = []
     for k in range(K):
@@ -153,12 +161,15 @@ def update_mean_cov(gmm, classification, data, K):
             
         clusters.append(cluster)
     
+    loglikelihoods = []
     ## Recalculate means and cov
     for g, c in zip(gmm, clusters):
         g.mean = g.calculate_mean(c)
         g.cov = np.cov(c)
+        #print(np.sum(g.logpdf(c.T) ))
+        loglikelihoods.append( np.sum(g.logpdf(c.T) ))
   
-    return gmm
+    return gmm, loglikelihoods
     
 
 def gmmToyExample() -> None:
