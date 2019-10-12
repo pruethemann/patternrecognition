@@ -75,7 +75,7 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     # TODO: EXERCISE 2 - Implement E and M step of GMM algorithm
     # 1. Hint - first randomly assign a cluster to each sample
     
-    ## randomly assign 3 different means between -4 - 8 and -4 and 4
+    ## randomly assign K different means between -4 - 8 and -4 and 4
     gmm = []
     liklehood = []
     loglike= 0
@@ -83,17 +83,17 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
         c = MVND(data)
         c.mean[0] = random.uniform(-4,4)
         c.mean[1] = random.uniform(-4,4)
-        c.c = 1/3
+        c.c = 1/K
         gmm.append(c)
         
     gmm_draw(gmm,data, "TOY")
     plt.show()
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
     for i in range(iter):     
-        likelihood, wp1, wp2, wp3 = e_step(loglike, data, N, gmm)
+        likelihood, clusters = e_step(loglike, data, N, gmm, K)
         #m_step(gmm, wp1, wp2, wp3)
-        clusters = optimize(wp1,wp2,wp3)
-        gmm = calculate_mean(gmm,clusters, data)
+        classification = maximize(clusters, K, N)
+        gmm = update_mean_cov(gmm, classification, data, K)
         if(plot):
             gmm_draw(gmm,data, "TOY")
             plt.show()
@@ -105,75 +105,59 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
         print("Cov: \n", g.cov)
     return gmm
 
-def e_step(loglike, data, N, gmm):
+def e_step(loglike, data, N, gmm, K):
     ## extract X
-    
-    for n in range(1):
-        x = np.transpose(data)
+    clusters = []
+    x = np.transpose(data)
+    for k in range(K):
+        clusters.append( gmm[k].pdf(x) )# * gmm[0].c
 
-        c1 = gmm[0].pdf(x) * gmm[0].c
-        c2 = gmm[1].pdf(x)  * gmm[1].c
-        c3 = gmm[2].pdf(x) * gmm[2].c
-        den = c1 + c2 + c3
+#        den = c1 + c2 + c3
+#        c1 /= den
+#        c2 /= den
+#        c3 /= den
 
-        c1 /= den
-        c2 /= den
-        c3 /= den
+    loglike = 1
 
-        loglike += np.log(c1 + c2 + c3)
-
-    return loglike, c1, c2, c3
+    return loglike, clusters
 
  
-def optimize(c1,c2,c3):
-    clusters = np.zeros(200)
-    for i in range(200):
-        if c1[i] > c2[i] and c1[i] > c3[i]:
-            decision = 0
-        elif c2[i] > c1[i] and c2[i] > c3[i]:
-            decision = 1
-        else:
-            decision = 2
+def maximize(clusters, K, N):
+    classification = np.zeros(N)
+    
+    for i in range(N):
+        compare = [] #np.zeros(K)
+        for k in range(K):
+            compare.append( clusters[k][i])
         
-        clusters[i] = decision
-    return clusters
+        max_index = compare.index(max(compare))
+    
+        classification[i] = max_index#clusters[max_index][i]
+
+    return classification
         
-def calculate_mean(gmm,clusters, data):
+def update_mean_cov(gmm, classification, data, K):
 
-    c1 = np.where(clusters==0)[0] # Get indexes
-    c2 = np.where(clusters==1)[0] # Get indexes
-    c3 = np.where(clusters==2)[0] # Get indexes
-
-    (N1,) = c1.shape
-    (N2,) = c2.shape
-    (N3,) = c3.shape    
-    sum1 = np.zeros((2,N1))
-    sum2 = np.zeros((2,N2))    
-    sum3 = np.zeros((2,N3))
-
-    for col in range(N1):
-        index = c1[col]
-        sum1[0][col] = data[0][index]
-        sum1[1][col] = data[1][index]
+    ## Create K arrays with the indexes of the highest probability
+    clusters = []
+    for k in range(K):
+        cluster_index = np.where(classification==k)[0]# Get indexes
+        ## create new array for every cluster with probability
+        (size, ) = cluster_index.shape
+        cluster = np.zeros((2,size))
         
-    for col in range(N2):
-        index = c2[col]
-        sum2[0][col] = data[0][index]
-        sum2[1][col] = data[1][index]
-        
-        
-    for col in range(N3):
-        index = c3[col]
-        sum3[0][col] = data[0][index]
-        sum3[1][col] = data[1][index]
-
-    gmm[0].mean = gmm[0].calculate_mean(sum1)
-    gmm[1].mean = gmm[1].calculate_mean(sum2)    
-    gmm[2].mean = gmm[2].calculate_mean(sum3)    
-
-    gmm[0].cov = np.cov(sum1)
-    gmm[1].cov = np.cov(sum2)
-    gmm[2].cov = np.cov(sum3)    
+        for col in range(size):
+            index = cluster_index[col]
+            cluster[0][col] = data[0][index]
+            cluster[1][col] = data[1][index]      
+            
+        clusters.append(cluster)
+    
+    ## Recalculate means and cov
+    for g, c in zip(gmm, clusters):
+        g.mean = g.calculate_mean(c)
+        g.cov = np.cov(c)
+  
     return gmm
     
 
