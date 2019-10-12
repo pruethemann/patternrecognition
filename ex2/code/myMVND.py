@@ -12,7 +12,7 @@ class MVND:
         self.cov  = np.cov(data)
 
     # EXERCISE 2 - Implement pdf and logpdf of a MVND
-    def pdf(self, x: np.ndarray) -> np.ndarray:            
+    def pdf(self, x: np.ndarray) -> np.ndarray:        
        return multivariate_normal.pdf(x, self.mean, self.cov)
 
     def logpdf(self, x: np.ndarray) -> np.ndarray:

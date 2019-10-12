@@ -52,7 +52,7 @@ print(x.shape)
 ##☻plt.plot(X_train)
 
 # fit a Gaussian Mixture Model with two components
-clf = mixture.GaussianMixture(n_components=1, covariance_type='full')
+clf = mixture.GaussianMixture(n_components=3, covariance_type='full')
 clf.fit(shifted_gaussian)
 print(clf.means_)
 print()

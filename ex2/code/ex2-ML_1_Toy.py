@@ -242,8 +242,11 @@ if __name__ == '__main__':
 
     class0_mean = calculate_sample_mean(class0_training_data)
     class1_mean = calculate_sample_mean(class1_training_data)
+    
 
-    class0_cov = calculate_sample_covariance_matrix(class0_training_data, class0_mean)
+    
+    class0_cov = calculate_sample_covariance_matrix(class0_training_data, class0_mean)   
+    #class0_cov = np.array( [[ 0.83933022 , 0.26985622], [ 0.26985622 , 0.37520442]])
     class1_cov = calculate_sample_covariance_matrix(class1_training_data, class1_mean)
 
     print("\nClass0: Estimated mean: {}, \nEstimated covariance matrix: \n{}".format(class0_mean, class0_cov))
