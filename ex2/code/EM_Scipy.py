@@ -32,7 +32,7 @@ np.random.seed(0)
 data = scipy.io.loadmat(os.path.join('../data/', 'gmmdata.mat'))['gmmdata']
 data = data.T
 
-print(shifted_gaussian.shape)
+#print(shifted_gaussian.shape)
 shifted_gaussian = data
 x,y = shifted_gaussian[:,0], shifted_gaussian[:,1]
 print(type(shifted_gaussian))
@@ -57,6 +57,7 @@ clf.fit(shifted_gaussian)
 print(clf.means_)
 print()
 print(clf.covariances_)
+print(clf.weights_)
 
 # display predicted scores by the model as a contour plot
 x = np.linspace(-8., 9.)

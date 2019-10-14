@@ -4,6 +4,8 @@ import scipy.io
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import style
+style.use('default')
 import random
 from statistics import mean 
 
@@ -95,12 +97,12 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
         
         clusters = e_step(data, N, gmm, K)
         classification = maximize(clusters, K, N)
-        gmm, loglikelihoods = update_parameters(gmm, classification, data, K, d)
+        gmm, loglikelihoods = update_parameters(gmm, classification, data, K, d, N)
              
         ## check for convergence of liklehoods
         #print(loglikelihoods)
-        if np.abs(sum(loglikelihoods) - log_before) < eps:
-            break
+#        if np.abs(sum(loglikelihoods) - log_before) < eps:
+#            break
         
         log_before = sum(loglikelihoods)
         iteration += 1        
@@ -113,10 +115,11 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     print("Converged in ", iteration, " iterations!")
     i = 1
     for g, log in zip(gmm,loglikelihoods):
-        print("Mean ", i, ": \n", g.mean)
-        print("Cov ", i, ": \n", g.cov)
-        print("Likelihood ", i,  ": \n", log ,"\n" )
-        print("c: ", g.c, "   ", len(loglikelihoods))
+        print("         CLUSTER ",  i)
+        print("Mean \n", g.mean)
+        print("Cov \n", g.cov)
+        print("Likelihood \n", log)
+        print("weight: ", round(g.c,3), "\n")
         i+=1
     return gmm
 
@@ -125,7 +128,7 @@ def e_step(data, N, gmm, K):
     clusters = []
     x = np.transpose(data)
     for k in range(K):
-        clusters.append( gmm[k].pdf(x) )# * gmm[0].c
+        clusters.append( gmm[k].pdf(x) * gmm[k].c)# 
     return clusters
 
  
@@ -143,14 +146,13 @@ def maximize(clusters, K, N):
 
     return classification
         
-def update_parameters(gmm, classification, data, K, dim):
+def update_parameters(gmm, classification, data, K, dim, N):
     ## Create K arrays with the indexes of the highest probability
     clusters = []
     for k in range(K):
         cluster_index = np.where(classification==k)[0]# Get indexes
         ## create new array for every cluster with probability
         (size, ) = cluster_index.shape
-        #print(size)
         cluster = np.zeros((dim,size))
 
         for col in range(size):
@@ -163,8 +165,13 @@ def update_parameters(gmm, classification, data, K, dim):
     loglikelihoods = []
     ## Recalculate means and cov
     for g, c in zip(gmm, clusters):
+
+        ## update mean, cov and c
         g.mean = g.calculate_mean(c)       
         g.cov = np.cov(c)
+        
+        (_,size) = c.shape
+        g.c = size/N
         try:
             loglikelihoods.append(np.sum(g.logpdf(c.T) ) )
         except:
@@ -202,7 +209,7 @@ def gmmSkinDetection() -> None:
     Note that the "mask" binary images are used as the ground truth.
     '''
     
-    K = 4
+    K = 2
     iter = 50
     sdata = scipy.io.loadmat(os.path.join(dataPath, 'skin.mat'))['sdata']
     ndata = scipy.io.loadmat(os.path.join(dataPath, 'nonskin.mat'))['ndata']

@@ -106,15 +106,19 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     #############################################    
     
     ##POSTERIOR = (LIKELIHOOD · PRIOR) / EVIDENCE
+    ## Calculate posteriors for skin and non_skin via Bayes (not required)   
+#    evidence = np.exp(likelihood_of_skin_rgb) * prior_skin + np.exp(likelihood_of_nonskin_rgb) * prior_nonskin
+#    posterior_skin = np.exp(likelihood_of_skin_rgb) * prior_skin / evidence    
+#    posterior_nonskin = np.exp(likelihood_of_nonskin_rgb) * prior_nonskin / evidence            
+#    posterior = posterior_skin - posterior_nonskin    
     
-    ## Calculate Evidence
-    evidence = np.exp(likelihood_of_skin_rgb) * prior_skin + np.exp(likelihood_of_nonskin_rgb) * prior_nonskin
+    ## Classification with Prior: S. 26 Lecture 3
+    posterior_skin = likelihood_of_skin_rgb + np.log(prior_skin)
+    posterior_nonskin = likelihood_of_nonskin_rgb + np.log(prior_nonskin)
     
-    ## Calculate posteriors for skin and non_skin    
-    posterior_skin = np.exp(likelihood_of_skin_rgb) * prior_skin / evidence    
-    posterior_nonskin = np.exp(likelihood_of_nonskin_rgb) * prior_nonskin / evidence
+    # classify. if skin > nonskin then posterior >0
+    posterior = posterior_skin - posterior_nonskin     
     
-    posterior = posterior_skin - posterior_nonskin    
     ## Classification. If value larger than 0 it's skin. And get's classified with 1
     skin_prior = (posterior > 0).astype(int)  
     
