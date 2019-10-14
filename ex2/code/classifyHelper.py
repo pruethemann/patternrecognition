@@ -106,9 +106,12 @@ def classify(img: imageHelper, mask: imageHelper, skin_mvnd: List[MVND], notSkin
     #############################################    
     
     ##POSTERIOR = (LIKELIHOOD · PRIOR) / EVIDENCE
-    evidence = np.exp(likelihood_of_skin_rgb) * prior_skin + np.exp(likelihood_of_nonskin_rgb) * prior_nonskin
-    posterior_skin = np.exp(likelihood_of_skin_rgb) * prior_skin / evidence
     
+    ## Calculate Evidence
+    evidence = np.exp(likelihood_of_skin_rgb) * prior_skin + np.exp(likelihood_of_nonskin_rgb) * prior_nonskin
+    
+    ## Calculate posteriors for skin and non_skin    
+    posterior_skin = np.exp(likelihood_of_skin_rgb) * prior_skin / evidence    
     posterior_nonskin = np.exp(likelihood_of_nonskin_rgb) * prior_nonskin / evidence
     
     posterior = posterior_skin - posterior_nonskin    

@@ -77,44 +77,46 @@ def gmm_em(data, K: int, iter: int, plot=False) -> list:
     
     ## randomly assign K different means between -4 - 8 and -4 and 4
     gmm = []
-    liklehood = []
-    loglike= 0
+    
     for k in range(K):
         c = MVND(data)
-        c.mean[0] = random.uniform(-4,4)
-        c.mean[1] = random.uniform(-4,4)
+        for dim in range(d):
+            c.mean[dim] = random.uniform(0.45,0.55)
         c.c = 1/K
         gmm.append(c)
-        
-    gmm_draw(gmm,data, "TOY")
-    plt.show()
+
     # Hint - then iteratively update mean, cov and p value of each cluster via EM
     log_before = -1000
     iteration = 0
     for i in range(iter):
-
-        clusters = e_step(data, N, gmm, K)
-        #m_step(gmm, wp1, wp2, wp3)
-        classification = maximize(clusters, K, N)
-        gmm, loglikelihoods = update_mean_cov(gmm, classification, data, K)
         if(plot):
             gmm_draw(gmm,data, "TOY")
-            plt.show()
-            
+            plt.show()        
+        
+        clusters = e_step(data, N, gmm, K)
+        classification = maximize(clusters, K, N)
+        gmm, loglikelihoods = update_parameters(gmm, classification, data, K, d)
+             
         ## check for convergence of liklehoods
-        if np.abs(np.sum(loglikelihoods) - log_before) < eps:
+        #print(loglikelihoods)
+        if np.abs(sum(loglikelihoods) - log_before) < eps:
             break
         
-        log_before = np.sum(loglikelihoods)
-        iteration += 1
+        log_before = sum(loglikelihoods)
+        iteration += 1        
+        
+    if(plot):
+        gmm_draw(gmm,data, "TOY")
+        plt.show()    
     
-    ## shows means
+    ## shows stats
     print("Converged in ", iteration, " iterations!")
     i = 1
     for g, log in zip(gmm,loglikelihoods):
         print("Mean ", i, ": \n", g.mean)
         print("Cov ", i, ": \n", g.cov)
-        print("Likelihood ", i,  ": \n", np.exp(log) ,"\n" )
+        print("Likelihood ", i,  ": \n", log ,"\n" )
+        print("c: ", g.c, "   ", len(loglikelihoods))
         i+=1
     return gmm
 
@@ -124,10 +126,6 @@ def e_step(data, N, gmm, K):
     x = np.transpose(data)
     for k in range(K):
         clusters.append( gmm[k].pdf(x) )# * gmm[0].c
-#        den = c1 + c2 + c3
-#        c1 /= den
-#        c2 /= den
-#        c3 /= den
     return clusters
 
  
@@ -145,29 +143,37 @@ def maximize(clusters, K, N):
 
     return classification
         
-def update_mean_cov(gmm, classification, data, K):
+def update_parameters(gmm, classification, data, K, dim):
     ## Create K arrays with the indexes of the highest probability
     clusters = []
     for k in range(K):
         cluster_index = np.where(classification==k)[0]# Get indexes
         ## create new array for every cluster with probability
         (size, ) = cluster_index.shape
-        cluster = np.zeros((2,size))
-        
+        #print(size)
+        cluster = np.zeros((dim,size))
+
         for col in range(size):
             index = cluster_index[col]
-            cluster[0][col] = data[0][index]
-            cluster[1][col] = data[1][index]      
-            
+            for d in range(dim):
+                cluster[d][col] = data[d][index]
+
         clusters.append(cluster)
     
     loglikelihoods = []
     ## Recalculate means and cov
     for g, c in zip(gmm, clusters):
-        g.mean = g.calculate_mean(c)
+        g.mean = g.calculate_mean(c)       
         g.cov = np.cov(c)
-        #print(np.sum(g.logpdf(c.T) ))
-        loglikelihoods.append( np.sum(g.logpdf(c.T) ))
+        try:
+            loglikelihoods.append(np.sum(g.logpdf(c.T) ) )
+        except:
+            print("array must not contain infs or NaNs")
+            loglikelihoods.append(1)
+        
+    ## update c
+    for g, log in zip(gmm, loglikelihoods):
+        g.c = log/sum(loglikelihoods)
   
     return gmm, loglikelihoods
     
@@ -177,8 +183,17 @@ def gmmToyExample() -> None:
     GMM toy example - load toyexample data and visualize cluster assignment of each datapoint
     '''
     gmmdata = scipy.io.loadmat(os.path.join(dataPath, 'gmmdata.mat'))['gmmdata']
+    #gmmdata = generateData()
     gmm_em(gmmdata, 3, 20, plot=True)
 
+def generateData():
+# generate spherical data centered on (20, 20)
+    n_samples = 100
+    c1 = np.random.randn(n_samples, 2) + np.array([7.5, -4])
+    c2 = np.random.randn(n_samples, 2) + np.array([6, 4])
+    c3 = np.random.randn(n_samples, 2) + np.array([0, 0])
+    c4 = np.random.randn(n_samples, 2) + np.array([-2, 6])     
+    return np.concatenate((c1,c2,c3,c4)).T
 
 def gmmSkinDetection() -> None:
     '''
@@ -186,10 +201,12 @@ def gmmSkinDetection() -> None:
     Classify the test and training image using the classify helper function.
     Note that the "mask" binary images are used as the ground truth.
     '''
-    K = 3
+    
+    K = 4
     iter = 50
     sdata = scipy.io.loadmat(os.path.join(dataPath, 'skin.mat'))['sdata']
     ndata = scipy.io.loadmat(os.path.join(dataPath, 'nonskin.mat'))['ndata']
+
     gmms = gmm_em(sdata, K, iter)
     gmmn = gmm_em(ndata, K, iter)
 
@@ -216,8 +233,8 @@ if __name__ == "__main__":
     print("Python version in use: ", sys.version)
     print("\nMVND exercise - Toy example")
     print("##########-##########-##########")
-    gmmToyExample()
+    #gmmToyExample()
     print("\nMVND exercise - Skin detection")
     print("##########-##########-##########")
-    #gmmSkinDetection()
+    gmmSkinDetection()
     print("##########-##########-##########")
