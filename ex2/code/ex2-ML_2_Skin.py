@@ -31,6 +31,7 @@ def mvndSkinDetection() -> None:
     mask.loadImageFromFile(os.path.join(dataPath, 'mask.png'))
     # EXERCISE 2 - Compute the skin and nonskin prior
     prior_skin, prior_nonskin = get_prior(mask)
+    print(prior_skin)
 
     print("TRAINING DATA")
     trainingmaskObj = imageHelper()

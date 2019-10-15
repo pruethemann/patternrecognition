@@ -209,7 +209,7 @@ def gmmSkinDetection() -> None:
     Note that the "mask" binary images are used as the ground truth.
     '''
     
-    K = 2
+    K = 1
     iter = 50
     sdata = scipy.io.loadmat(os.path.join(dataPath, 'skin.mat'))['sdata']
     ndata = scipy.io.loadmat(os.path.join(dataPath, 'nonskin.mat'))['ndata']
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     print("Python version in use: ", sys.version)
     print("\nMVND exercise - Toy example")
     print("##########-##########-##########")
-    #gmmToyExample()
+    gmmToyExample()
     print("\nMVND exercise - Skin detection")
     print("##########-##########-##########")
     gmmSkinDetection()

@@ -34,9 +34,9 @@ def log_likelihood(data: np.ndarray, gmm: List[MVND]) -> np.ndarray:
 def get_prior(mask: imageHelper) -> (float, float):
     [N, M] = mask.shape
     image_mask = mask.image[:]
-    # EXERCISE 2 - Compute the skin 0 and nonskin 1 prior   
+    # EXERCISE 2 - Compute the skin 1 and nonskin 0 prior   
     # determine fraction of image              
-    prior_skin = image_mask[image_mask == 0]
+    prior_skin = image_mask[image_mask == 1]
     
     (skin_pixel,) = prior_skin.shape
     prior_skin = skin_pixel / (N*M)
