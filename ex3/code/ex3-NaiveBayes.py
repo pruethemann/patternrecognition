@@ -18,6 +18,8 @@ def spamHamtoyExample() -> None:
     naivebay = naiveBayes()
     naivebay.train(os.path.join(filedir, 'train/'))
 
+
+"""
     numOfItemsToPrint = 10
     naivebay.printMostPopularHamWords(numOfItemsToPrint)
     naivebay.printMostPopularSpamWords(numOfItemsToPrint)
@@ -37,7 +39,7 @@ def spamHamtoyExample() -> None:
     plt.xlabel('Number of Features')
     plt.ylabel('Classification Score')
     plt.show()
-
+"""
 
 if __name__ == "__main__":
     print("Python version in use: ", sys.version)
@@ -45,3 +47,5 @@ if __name__ == "__main__":
     print("##########-##########-##########")
     spamHamtoyExample()
     print("##########-##########-##########")
+
+
