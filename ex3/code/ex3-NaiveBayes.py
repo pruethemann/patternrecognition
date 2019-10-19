@@ -20,8 +20,8 @@ def spamHamtoyExample() -> None:
 
 
 
-    numOfItemsToPrint = 50
-   # naivebay.printMostPopularHamWords(numOfItemsToPrint)
+    numOfItemsToPrint = 10
+    naivebay.printMostPopularHamWords(numOfItemsToPrint)
     naivebay.printMostPopularSpamWords(numOfItemsToPrint)
 #    naivebay.printMostindicativeHamWords(numOfItemsToPrint)
 #    naivebay.printMostindicativeSpamWords(numOfItemsToPrint)
