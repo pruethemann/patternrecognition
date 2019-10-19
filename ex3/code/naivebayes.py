@@ -41,7 +41,6 @@ class naiveBayes():
         :return: model dictionary and model prior
         '''
         files = sorted(glob.glob(msgDirectory + fileFormat))
-        print(msgDirectory)
 
         # TODO: Train the naive bayes classifier
         # TODO: Hint - store the dictionary as a list of 'wordCounter' objects
@@ -108,11 +107,12 @@ class naiveBayes():
         return self.dictionary, self.logPrior
     
     def checkInDictionary(self, final_dict, word) -> bool:
+
         for i in range(len(final_dict)):
             if final_dict[i].word == word:
                 return True
-            else:
-                return False
+
+        return False
             
     def getWordCounter(self, final_dict, word) -> wordCounter:
         for i in range(len(final_dict)):
@@ -151,7 +151,13 @@ class naiveBayes():
 
     def printMostPopularSpamWords(self, num: int) -> None:
         print("{} most popular SPAM words:".format(num))
-        # TODO: print the 'num' most used SPAM words from the dictionary
+        # print the 'num' most used SPAM words from the dictionary
+        c = 0
+        for spam in self.dictionary:
+            if c > num:
+                break
+            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , spam.p)
+            c +=1
 
     def printMostPopularHamWords(self, num: int) -> None:
         print("{} most popular HAM words:".format(num))

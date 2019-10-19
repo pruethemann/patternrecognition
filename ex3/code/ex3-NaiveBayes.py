@@ -19,13 +19,14 @@ def spamHamtoyExample() -> None:
     naivebay.train(os.path.join(filedir, 'train/'))
 
 
-"""
-    numOfItemsToPrint = 10
-    naivebay.printMostPopularHamWords(numOfItemsToPrint)
-    naivebay.printMostPopularSpamWords(numOfItemsToPrint)
-    naivebay.printMostindicativeHamWords(numOfItemsToPrint)
-    naivebay.printMostindicativeSpamWords(numOfItemsToPrint)
 
+    numOfItemsToPrint = 50
+   # naivebay.printMostPopularHamWords(numOfItemsToPrint)
+    naivebay.printMostPopularSpamWords(numOfItemsToPrint)
+#    naivebay.printMostindicativeHamWords(numOfItemsToPrint)
+#    naivebay.printMostindicativeSpamWords(numOfItemsToPrint)
+
+"""
     print('Model logPrior: {}'.format(naivebay.logPrior))
     features = [1, 2, 5, 10, 20, 30, 40, 50]
     accuracy = []
