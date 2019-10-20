@@ -26,9 +26,11 @@ def spamHamtoyExample() -> None:
     naivebay.printMostindicativeHamWords(numOfItemsToPrint)
     naivebay.printMostindicativeSpamWords(numOfItemsToPrint)
 
-"""
+
     print('Model logPrior: {}'.format(naivebay.logPrior))
     features = [1, 2, 5, 10, 20, 30, 40, 50]
+    features = [1, 2,3,4, 5, 10, 20, 30, 40, 50]    
+   # features = [14]    
     accuracy = []
     for i in features:
         acc = naivebay.classifyAndEvaluateAllInFolder(os.path.join(filedir, 'test/'), i)
@@ -40,7 +42,7 @@ def spamHamtoyExample() -> None:
     plt.xlabel('Number of Features')
     plt.ylabel('Classification Score')
     plt.show()
-"""
+
 
 if __name__ == "__main__":
     print("Python version in use: ", sys.version)

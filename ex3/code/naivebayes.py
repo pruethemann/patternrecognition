@@ -77,20 +77,23 @@ class naiveBayes():
                         ham_words[w] += 1
         
         final_dictionary = []
-        
+        self.totalNumberSpamWords = 0
+        self.totalNumberHamWords = 0
         for spam in spam_words:
             numberOfSpamWords = spam_words[spam]
+            self.totalNumberSpamWords += numberOfSpamWords
             final_dictionary.append(wordCounter(spam, 0, numberOfSpamWords, 0))
         
-        for ham in ham_words:
+        for ham in ham_words:            
             numberOfHamWords = ham_words[ham]
+            self.totalNumberHamWords += numberOfHamWords
             # create a new wordCounter instance for every new word
             if not self.checkInDictionary(final_dictionary, ham):
                 newWord = wordCounter(ham, numberOfHamWords, 0, 0)
                 final_dictionary.append(newWord)
                 
             else:
-                existingWord = self.getWordCounter(final_dictionary, ham)
+                existingWord = self.getWordCounter(final_dictionary, ham, len(final_dictionary), True)
                 existingWord.numOfHamWords = numberOfHamWords 
                 final_dictionary.append(existingWord)
                 
@@ -99,9 +102,16 @@ class naiveBayes():
             e.p = e.numOfSpamWords / (e.numOfSpamWords + e.numOfHamWords)
         
         
-        priorSpam =   spam_count/ len(files)    
+        priorSpam =   spam_count/ len(files)   
+        
+        self.spam_count = spam_count
+        self.ham_count = len(files) - spam_count
 
         self.logPrior = math.log(priorSpam / (1.0 - priorSpam))
+        
+        self.logSpamPrior = np.log(priorSpam)
+        self.logHamPrior = np.log(1- priorSpam)        
+        
         final_dictionary.sort(key=lambda x: x.p, reverse=True)
         self.dictionary = final_dictionary
         return self.dictionary, self.logPrior
@@ -114,14 +124,25 @@ class naiveBayes():
 
         return False
             
-    def getWordCounter(self, final_dict, word) -> wordCounter:
-        for i in range(len(final_dict)):
+    def getWordCounter(self, final_dict, word, number_of_features, remove = False) -> wordCounter:
+        c = 0
+        for i in range(number_of_features):
+            c+=1
             if final_dict[i].word == word:
                 element = final_dict[i]
-                final_dict.remove(element)
+                if(remove):
+                    final_dict.remove(element)
+              #  print(c, "   ", number_of_features)
                 return element
             
-        print("ERROR")
+        for i in range(len(final_dict)- number_of_features, len(final_dict)):
+            if final_dict[i].word == word:
+                element = final_dict[i]
+                if(remove):
+                    final_dict.remove(element)
+                return element            
+
+        return None
         
 
     def classify(self, message: str, number_of_features: int) -> bool:
@@ -130,10 +151,27 @@ class naiveBayes():
         :param number_of_features: Number of features to be used from the trained dictionary
         :return: True if classified as SPAM and False if classified as HAM
         '''
-
         txt = np.array(self._extractWords(message))
+        
         # TODO: Implement classification function
-        return ""
+        spamLogL = self.logSpamPrior
+        hamLogL = self.logHamPrior
+        
+        for word in txt:
+            wordStats = self.getWordCounter(self.dictionary, word, number_of_features)
+            if wordStats == None:
+                spamLogL += np.log(1/self.totalNumberSpamWords+1)
+                hamLogL += np.log(1/self.totalNumberHamWords    +1)
+            else:
+#                print(word, "   :", (wordStats.numOfSpamWords), "  ",  (self.totalNumberSpamWords) )
+#                print(word, "   :", (wordStats.numOfHamWords), "  ",  (self.totalNumberHamWords) )                
+                spamLogL += np.log((wordStats.numOfSpamWords+1) / (self.totalNumberSpamWords+1))
+                hamLogL += np.log((wordStats.numOfHamWords+1) / (self.totalNumberHamWords    +1)        )
+        
+        #print(spamLogL, "   ", hamLogL)
+        if spamLogL > hamLogL:
+            return True
+        return False
 
     def classifyAndEvaluateAllInFolder(self, msgDirectory: str, number_of_features: int,
                                        fileFormat: str = '*.txt') -> float:
@@ -142,12 +180,30 @@ class naiveBayes():
         :param number_of_features: Number of features to be used from the trained dictionary
         :return: Classification accuracy
         '''
+        
         files = sorted(glob.glob(msgDirectory + fileFormat))
         corr = 0  # Number of correctly classified messages
         ncorr = 0  # Number of falsely classified messages
         # TODO: Classify each email found in the given directory and figure out if they are correctly or falsely classified
         # TODO: Hint - look at the filenames to figure out the ground truth label
+        for f in files:
+            # open training files and save content as String
+            with open(f, 'r') as myfile:
+              emailContent = myfile.read()
+              
+             ## check if email is spamm
+            spam = self.classify(emailContent, number_of_features)
+            if spam and 'spmsga' in f or not spam and 'spmsga' not in f:
+
+                corr += 1 
+                            
+            else:
+               #♥ print(f, "   ", spam)
+                ncorr +=1
+
+        print(corr, "  ", ncorr)
         return corr / (corr + ncorr)
+    
 
     def printMostPopularSpamWords(self, num: int) -> None:
         print("{} most popular SPAM words:".format(num))
