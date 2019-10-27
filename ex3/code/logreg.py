@@ -89,7 +89,9 @@ class LOGREG(object):
 
     def activationFunction(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
         # TODO: Implement logistic function
-        return ???
+
+        # The Logistic Regression Posterior (page 19)
+        return 1 / (1 + np.exp(-(np.dot(w.transpose(), X))))
 
     def _costFunction(self, w: np.ndarray, X: np.ndarray, y: np.ndarray) -> float:
         '''
@@ -100,8 +102,13 @@ class LOGREG(object):
         :return: cost
         '''
         # TODO: Implement equation of cost function for posterior p(y=1|X,w)
-        cost = ???
-        regularizationTerm = ???
+
+        # Maximum Likelihood Estimate of w (page 26)
+        cost = 0
+        regularizationTerm = self.r
+
+        for i in range(len(y)):
+            cost += y[i] * w.transpose() * X[:, i] - np.log(1 + np.exp(w.transpose() * X[:, i]))
 
         return cost + regularizationTerm
 
@@ -114,10 +121,16 @@ class LOGREG(object):
         :return: first derivative of the model parameters
         '''
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
-        firstDerivative = ???
-        regularizationTerm = ???
 
-        return firstDerivative + regularizationTerm
+        # Maximum Likelihood Estimate of w (page 29)
+        firstDerivative = 0
+        regularizationTerm = self.r
+
+        for i in range(len(y)):
+            # multiply element-wise!
+            firstDerivative += np.multiply(y[i] - self.activationFunction(w, X[:, i]), X[:, i].transpose())
+
+        return np.transpose(firstDerivative + regularizationTerm)
 
     def _calculateHessian(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
         '''
@@ -126,8 +139,17 @@ class LOGREG(object):
         :return: the hessian matrix (second derivative of the model parameters)
         '''
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
-        hessian = ???
-        regularizationTerm = ???
+
+        # Hessian: Concave Likelihood (page 32)
+        # hessian = np.zeros(len(X), len(X))
+        hessian = 0
+        for i in range(len(X)):
+            xMultiply = np.multiply(X[:, i], X[:, i].transpose())
+            sigma = self.activationFunction(w, X[:, i])
+            sigmaMultiply = np.multiply(sigma, 1 - sigma)
+            hessian += np.multiply(xMultiply, sigmaMultiply)
+
+        regularizationTerm = self.r
         return - hessian + regularizationTerm
 
     def _optimizeNewtonRaphson(self, X: np.ndarray, y: np.ndarray, number_of_iterations: int) -> np.ndarray:
@@ -138,9 +160,10 @@ class LOGREG(object):
         :param number_of_iterations: number of iterations to take
         :return: model parameters (w)
         '''
-        # TODO: Implement Iterative Reweighted Least Squares algorithm for optimization, use the calculateDerivative and calculateHessian functions you have already defined above
+        # TODO: Implement Iterative Re-weighted Least Squares algorithm for optimization, use the calculateDerivative and calculateHessian functions you have already defined above
         w = np.zeros((X.shape[0], 1))  # Initializing the w vector as a numpy matrix class instance
 
+        # Iterative Re-weighted Least Squares (page 33)
         posteriorloglikelihood = self._costFunction(w, X, y)
         print('initial posteriorloglikelihood', posteriorloglikelihood, 'initial likelihood',
               np.exp(posteriorloglikelihood))
@@ -149,17 +172,20 @@ class LOGREG(object):
             oldposteriorloglikelihood = posteriorloglikelihood
             w_old = w
             h = self._calculateHessian(w, X)
-            w_update = ???
-            w = ???
+            # multiply element-wise!
+            w_update = w_old - np.multiply(np.linalg.inv(h), self._calculateDerivative(w_old, X, y))
+            w = w_update
             posteriorloglikelihood = self._costFunction(w, X, y)
             if self.r == 0:
                 # TODO: What happens if this condition is removed?
+                # Cannot test with regularization = 0
                 if np.exp(posteriorloglikelihood) > 0.99:
                     print('posterior > 0.99, breaking optimization at niter = ', i)
                     break
 
             if self.r > 0:
                 # TODO: What happens if this condition is removed?
+                #
                 if np.exp(posteriorloglikelihood) - np.exp(oldposteriorloglikelihood) < 0:  # posterior is decreasing
                     print('negative loglikelihood increasing, breaking optimization at niter = ', i)
                     posteriorloglikelihood = oldposteriorloglikelihood
@@ -167,6 +193,8 @@ class LOGREG(object):
                     break
             # TODO: Implement convergenc check based on when w_update is close to zero
             # Note: You can make use of the class threshold value self._threshold
+            if np.abs(w - w_old) < self._threshold:
+                break
         print('final posteriorloglikelihood', posteriorloglikelihood, 'final likelihood',
               np.exp(posteriorloglikelihood))
 
@@ -191,7 +219,9 @@ class LOGREG(object):
         '''
         # TODO: Implement classification function for each entry in the data matrix
         numberOfSamples = X.shape[1]
-        predictions = ???
+        predictions = np.zeros(numberOfSamples)
+
+        predictions = np.multiply(self.w.transpose(), X)
         return predictions
 
     def printClassification(self, X: np.ndarray, y: np.ndarray) -> None:
