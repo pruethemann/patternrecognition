@@ -108,7 +108,7 @@ class LOGREG(object):
         regularizationTerm = self.r
 
         for i in range(len(y)):
-            cost += y[i] * w.transpose() * X[:, i] - np.log(1 + np.exp(w.transpose() * X[:, i]))
+            cost += y[i] * np.dot(w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
 
         return cost + regularizationTerm
 
@@ -123,14 +123,14 @@ class LOGREG(object):
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
 
         # Maximum Likelihood Estimate of w (page 29)
-        firstDerivative = 0
+        firstDerivative = np.zeros((1, 3))
         regularizationTerm = self.r
+        temp = y.reshape(-1, 1)
 
-        for i in range(len(y)):
-            # multiply element-wise!
-            firstDerivative += np.multiply(y[i] - self.activationFunction(w, X[:, i]), X[:, i].transpose())
+        for i in range(temp.shape[0]):
+            firstDerivative += (temp[i, :] - self.activationFunction(w, X[:, i])) * X[:, i].transpose()
 
-        return np.transpose(firstDerivative + regularizationTerm)
+        return (firstDerivative + regularizationTerm).transpose()
 
     def _calculateHessian(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
         '''
@@ -141,13 +141,24 @@ class LOGREG(object):
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
 
         # Hessian: Concave Likelihood (page 32)
-        # hessian = np.zeros(len(X), len(X))
-        hessian = 0
-        for i in range(len(X)):
-            xMultiply = np.multiply(X[:, i], X[:, i].transpose())
-            sigma = self.activationFunction(w, X[:, i])
-            sigmaMultiply = np.multiply(sigma, 1 - sigma)
-            hessian += np.multiply(xMultiply, sigmaMultiply)
+        # hessian = np.zeros((X.shape[0], X.shape[0]))
+        # #hessian = 0
+        # for i in range(X.shape[1]):
+        #     xMultiply = X[:, i] * X[:, i].transpose()
+        #     sigma = self.activationFunction(w, X[:, i])
+        #     sigmaMultiply = np.multiply(sigma, 1 - sigma)
+        #     hessian += (xMultiply * sigmaMultiply)
+        #
+        # print("----- calcHessian")
+        # print("hessian.shape ", hessian.shape)
+        # regularizationTerm = self.r
+        # return - hessian + regularizationTerm
+
+        activationFactor = np.multiply(self.activationFunction(w, X), (1 - self.activationFunction(w, X)))
+        hessian = np.zeros((X.shape[0], X.shape[0]))
+
+        for i in range(activationFactor.size):
+            hessian += np.multiply(np.outer(X[:, i], np.transpose(X[:, i])), activationFactor[0, i])
 
         regularizationTerm = self.r
         return - hessian + regularizationTerm
@@ -172,9 +183,10 @@ class LOGREG(object):
             oldposteriorloglikelihood = posteriorloglikelihood
             w_old = w
             h = self._calculateHessian(w, X)
-            # multiply element-wise!
-            w_update = w_old - np.multiply(np.linalg.inv(h), self._calculateDerivative(w_old, X, y))
-            w = w_update
+
+            w_update = np.matmul(np.linalg.inv(h), self._calculateDerivative(w_old, X, y))
+            w = w_old - w_update
+
             posteriorloglikelihood = self._costFunction(w, X, y)
             if self.r == 0:
                 # TODO: What happens if this condition is removed?
@@ -193,8 +205,10 @@ class LOGREG(object):
                     break
             # TODO: Implement convergenc check based on when w_update is close to zero
             # Note: You can make use of the class threshold value self._threshold
-            if np.abs(w - w_old) < self._threshold:
-                break
+            for i in range(w_update.shape[0]):
+                if w_update[i, :] < self._threshold:
+                    break
+
         print('final posteriorloglikelihood', posteriorloglikelihood, 'final likelihood',
               np.exp(posteriorloglikelihood))
 
@@ -221,7 +235,8 @@ class LOGREG(object):
         numberOfSamples = X.shape[1]
         predictions = np.zeros(numberOfSamples)
 
-        predictions = np.multiply(self.w.transpose(), X)
+        predictions = np.dot(self.w.transpose(), X)
+        self.
         return predictions
 
     def printClassification(self, X: np.ndarray, y: np.ndarray) -> None:
