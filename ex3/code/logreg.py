@@ -233,10 +233,14 @@ class LOGREG(object):
         '''
         # TODO: Implement classification function for each entry in the data matrix
         numberOfSamples = X.shape[1]
-        predictions = np.zeros(numberOfSamples)
+        predictions = np.zeros((38))
 
-        predictions = np.dot(self.w.transpose(), X)
-        self.
+        for i in range(numberOfSamples):
+            if np.dot(X[:, i], self.w) > 0:
+                predictions[i] = 1.0
+            else:
+                predictions[i] = -1.0
+
         return predictions
 
     def printClassification(self, X: np.ndarray, y: np.ndarray) -> None:
@@ -247,5 +251,13 @@ class LOGREG(object):
         '''
         # TODO: Implement print classification
         numberOfSamples = X.shape[1]
+        predictions = self.classify(X)
+        numOfMissclassified = 0
+
+        for i in range(numberOfSamples):
+            if predictions[i] != y[i]:
+                numOfMissclassified += 1
+
+        totalError = 100.0 / numberOfSamples * numOfMissclassified
 
         print("{}/{} misclassified. Total error: {:.2f}%.".format(numOfMissclassified, numberOfSamples, totalError))
