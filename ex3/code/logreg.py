@@ -103,16 +103,16 @@ class LOGREG(object):
         '''
         # TODO: Implement equation of cost function for posterior p(y=1|X,w)
 
-        # Maximum Likelihood Estimate of w (page 26)
+        # Maximum Likelihood Estimate of w (page 26 resp. page 38)
         cost = 0
-        regularizationTerm = self.r
-
         for i in range(X.shape[1]):
             # cost += y[i] * np.dot(w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
             # factor = y[i] * w.transpose()
             cost += np.dot(y[i] * w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
 
-        return cost + regularizationTerm
+        # Regularization: cost = cost - 1/(2*sigma^2) * ||w||^2
+        regularizationTerm = self.r * np.linalg.norm(w)**2
+        return cost - regularizationTerm
 
     def _calculateDerivative(self, w: np.ndarray, X: np.ndarray, y: np.ndarray) -> np.ndarray:
         '''
@@ -141,6 +141,9 @@ class LOGREG(object):
         firstDerivative = np.dot(X, (np.reshape(self.activationFunction(w, X), (X.shape[1], 1)) - y.reshape((-1, 1))))
         # regularizationTerm = np.reshape(self.r * 2 * np.transpose(w), (X.shape[0], 1))
 
+        # Regularization: derivative = derivative - 1/sigma^2 * w.T
+        regularizationTerm = (2 * self.r * w.transpose()).reshape((X.shape[0], 1))
+
         return firstDerivative + regularizationTerm
 
     def _calculateHessian(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
@@ -154,9 +157,10 @@ class LOGREG(object):
         # ======================================================================================================
         # Hessian: Concave Likelihood (page 32)
         regularizationTerm = self.r
-        temp = np.zeros((X.shape[1], X.shape[1]))
-        for i in range(X.shape[1]):
-            xiReshape = X[:, i].reshape((3, 1))
+        [m, n] = X.shape
+        temp = np.zeros((n, n))
+        for i in range(n):
+            xiReshape = X[:, i].reshape((m, 1))
             factor1 = self.activationFunction(w, xiReshape)
             factor2 = 1 - self.activationFunction(w, xiReshape)
             temp[i][i] = factor1 * factor2
