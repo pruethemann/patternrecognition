@@ -127,12 +127,10 @@ class LOGREG(object):
         # Maximum Likelihood Estimate of w (page 29)
         # firstDerivative = np.zeros((1, 3))
         regularizationTerm = self.r
+        firstDerivative = np.dot(X, np.reshape(self.activationFunction(w, X), (-1, 1)) - y.reshape(-1, 1))
 
         # for i in range(len(y)):
         #     firstDerivative += np.multiply(y[i] - self.activationFunction(w, X[:, i]), X[:, i].T)
-        #     firstDerivative =
-
-        firstDerivative = np.dot(X, (np.reshape(self.activationFunction(w, X), (X.shape[1], 1)) - y.reshape(y.shape[0], 1)))
 
         return firstDerivative + regularizationTerm
 
@@ -145,7 +143,7 @@ class LOGREG(object):
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
 
         # Hessian: Concave Likelihood (page 32)
-
+        regularizationTerm = self.r
         temp = np.zeros((X.shape[1], X.shape[1]))
         for i in range(X.shape[1]):
             temp[i][i] = self.activationFunction(w, X[:, i]) * (1 - self.activationFunction(w, X[:, i]))
@@ -160,7 +158,6 @@ class LOGREG(object):
         #     sigmaMultiply = np.multiply(sigma, 1 - sigma)
         #     hessian += (xMultiply * sigmaMultiply)
 
-        regularizationTerm = self.r
         return - hessian + regularizationTerm
 
     def _optimizeNewtonRaphson(self, X: np.ndarray, y: np.ndarray, number_of_iterations: int) -> np.ndarray:
