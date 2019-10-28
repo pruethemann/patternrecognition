@@ -102,7 +102,6 @@ class LOGREG(object):
         :return: cost
         '''
         # TODO: Implement equation of cost function for posterior p(y=1|X,w)
-
         # Maximum Likelihood Estimate of w (page 26 resp. page 38)
         cost = 0
         for i in range(X.shape[1]):
@@ -123,9 +122,7 @@ class LOGREG(object):
         :return: first derivative of the model parameters
         '''
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
-
         # Maximum Likelihood Estimate of w (page 29 and page 38). Derivative shape = (3, 1)
-        regularizationTerm = self.r
 
         # Try No. 1
         # firstDerivative = np.zeros((1, 3))
@@ -199,7 +196,6 @@ class LOGREG(object):
               np.exp(posteriorloglikelihood))
 
         for i in range(number_of_iterations):
-            # ======================================================================================================
             oldposteriorloglikelihood = posteriorloglikelihood
             w_old = w
             h = self._calculateHessian(w, X)
