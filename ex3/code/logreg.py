@@ -107,8 +107,10 @@ class LOGREG(object):
         cost = 0
         regularizationTerm = self.r
 
-        for i in range(len(y)):
-            cost += y[i] * np.dot(w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
+        for i in range(X.shape[1]):
+            # cost += y[i] * np.dot(w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
+            factor = y[i] * w.transpose()
+            cost += np.dot(factor, X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
 
         return cost + regularizationTerm
 
@@ -123,14 +125,16 @@ class LOGREG(object):
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
 
         # Maximum Likelihood Estimate of w (page 29)
-        firstDerivative = np.zeros((1, 3))
+        # firstDerivative = np.zeros((1, 3))
         regularizationTerm = self.r
-        temp = y.reshape(-1, 1)
 
-        for i in range(temp.shape[0]):
-            firstDerivative += (temp[i, :] - self.activationFunction(w, X[:, i])) * X[:, i].transpose()
+        # for i in range(len(y)):
+        #     firstDerivative += np.multiply(y[i] - self.activationFunction(w, X[:, i]), X[:, i].T)
+        #     firstDerivative =
 
-        return (firstDerivative + regularizationTerm).transpose()
+        firstDerivative = np.dot(X, (np.reshape(self.activationFunction(w, X), (X.shape[1], 1)) - y.reshape(y.shape[0], 1)))
+
+        return firstDerivative + regularizationTerm
 
     def _calculateHessian(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
         '''
@@ -141,24 +145,20 @@ class LOGREG(object):
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
 
         # Hessian: Concave Likelihood (page 32)
+
+        temp = np.zeros((X.shape[1], X.shape[1]))
+        for i in range(X.shape[1]):
+            temp[i][i] = self.activationFunction(w, X[:, i]) * (1 - self.activationFunction(w, X[:, i]))
+
+        hessian = np.dot(X, temp)
+        hessian = np.dot(hessian, X.transpose())
+
         # hessian = np.zeros((X.shape[0], X.shape[0]))
-        # #hessian = 0
         # for i in range(X.shape[1]):
-        #     xMultiply = X[:, i] * X[:, i].transpose()
+        #     xMultiply = np.outer(X[:, i], X[:, i].transpose())
         #     sigma = self.activationFunction(w, X[:, i])
         #     sigmaMultiply = np.multiply(sigma, 1 - sigma)
         #     hessian += (xMultiply * sigmaMultiply)
-        #
-        # print("----- calcHessian")
-        # print("hessian.shape ", hessian.shape)
-        # regularizationTerm = self.r
-        # return - hessian + regularizationTerm
-
-        activationFactor = np.multiply(self.activationFunction(w, X), (1 - self.activationFunction(w, X)))
-        hessian = np.zeros((X.shape[0], X.shape[0]))
-
-        for i in range(activationFactor.size):
-            hessian += np.multiply(np.outer(X[:, i], np.transpose(X[:, i])), activationFactor[0, i])
 
         regularizationTerm = self.r
         return - hessian + regularizationTerm
@@ -184,7 +184,7 @@ class LOGREG(object):
             w_old = w
             h = self._calculateHessian(w, X)
 
-            w_update = np.matmul(np.linalg.inv(h), self._calculateDerivative(w_old, X, y))
+            w_update = np.dot(np.linalg.inv(h), self._calculateDerivative(w_old, X, y))
             w = w_old - w_update
 
             posteriorloglikelihood = self._costFunction(w, X, y)
@@ -205,9 +205,8 @@ class LOGREG(object):
                     break
             # TODO: Implement convergenc check based on when w_update is close to zero
             # Note: You can make use of the class threshold value self._threshold
-            for i in range(w_update.shape[0]):
-                if w_update[i, :] < self._threshold:
-                    break
+            if np.sum(np.abs(w_old - w_update)):
+                break
 
         print('final posteriorloglikelihood', posteriorloglikelihood, 'final likelihood',
               np.exp(posteriorloglikelihood))
@@ -233,13 +232,7 @@ class LOGREG(object):
         '''
         # TODO: Implement classification function for each entry in the data matrix
         numberOfSamples = X.shape[1]
-        predictions = np.zeros((38))
-
-        for i in range(numberOfSamples):
-            if np.dot(X[:, i], self.w) > 0:
-                predictions[i] = 1.0
-            else:
-                predictions[i] = -1.0
+        predictions = np.around(self.activationFunction(self.w, X))
 
         return predictions
 
@@ -252,12 +245,8 @@ class LOGREG(object):
         # TODO: Implement print classification
         numberOfSamples = X.shape[1]
         predictions = self.classify(X)
-        numOfMissclassified = 0
 
-        for i in range(numberOfSamples):
-            if predictions[i] != y[i]:
-                numOfMissclassified += 1
-
+        numOfMissclassified = np.sum(np.abs(y - predictions))
         totalError = 100.0 / numberOfSamples * numOfMissclassified
 
         print("{}/{} misclassified. Total error: {:.2f}%.".format(numOfMissclassified, numberOfSamples, totalError))
