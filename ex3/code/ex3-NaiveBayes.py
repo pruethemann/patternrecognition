@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from naivebayes import naiveBayes
 
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 
 
 def spamHamtoyExample() -> None:
@@ -29,8 +29,6 @@ def spamHamtoyExample() -> None:
 
     print('Model logPrior: {}'.format(naivebay.logPrior))
     features = [1, 2, 5, 10, 20, 30, 40, 50]
-    features = [1, 2,3,4, 5, 10, 20, 30, 40, 50]    
-   # features = [14]    
     accuracy = []
     for i in features:
         acc = naivebay.classifyAndEvaluateAllInFolder(os.path.join(filedir, 'test/'), i)

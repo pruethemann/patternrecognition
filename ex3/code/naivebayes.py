@@ -200,8 +200,6 @@ class naiveBayes():
             else:
                #♥ print(f, "   ", spam)
                 ncorr +=1
-
-        print(corr, "  ", ncorr)
         return corr / (corr + ncorr)
     
 
@@ -214,19 +212,19 @@ class naiveBayes():
         for spam in self.dictionary:
             if c > num:
                 break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , spam.p)
+            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , round(spam.p,2))
             c +=1
 
     def printMostPopularHamWords(self, num: int) -> None:
         print("{} most popular HAM words:".format(num))
-        # TODO: print the 'num' most used HAM words from the dictionary
+        # print the 'num' most used HAM words from the dictionary
         self.dictionary.sort(key=lambda x: x.numOfHamWords, reverse=True)
         
         c = 0
-        for spam in self.dictionary:
+        for ham in self.dictionary:
             if c > num:
                 break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , spam.p)
+            print(ham.word, "   ", ham.numOfHamWords, "   ", ham.numOfSpamWords, "   " , round(ham.p,2))
             c +=1        
         
 
@@ -239,7 +237,7 @@ class naiveBayes():
         for spam in self.dictionary:
             if c > num:
                 break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , spam.p)
+            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , round(spam.p,2))
             c +=1         
         
 
@@ -249,8 +247,8 @@ class naiveBayes():
         self.dictionary.sort(key=lambda x: x.p, reverse=False)
         
         c = 0
-        for spam in self.dictionary:
+        for ham in self.dictionary:
             if c > num:
                 break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , spam.p)
+            print(ham.word, "   ", ham.numOfHamWords, "   ", ham.numOfSpamWords, "   " , round(ham.p,2))
             c +=1   
