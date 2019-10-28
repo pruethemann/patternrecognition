@@ -124,7 +124,7 @@ class LOGREG(object):
         '''
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
 
-        # Maximum Likelihood Estimate of w (page 29). Derivative shape = (3, 1)
+        # Maximum Likelihood Estimate of w (page 29 and page 38). Derivative shape = (3, 1)
         regularizationTerm = self.r
 
         # Try No. 1
@@ -139,7 +139,6 @@ class LOGREG(object):
         # Try No. 2
         y = y.reshape(y.shape[0], 1)
         firstDerivative = np.dot(X, (np.reshape(self.activationFunction(w, X), (X.shape[1], 1)) - y.reshape((-1, 1))))
-        # regularizationTerm = np.reshape(self.r * 2 * np.transpose(w), (X.shape[0], 1))
 
         # Regularization: derivative = derivative - 1/sigma^2 * w.T
         regularizationTerm = (2 * self.r * w.transpose()).reshape((X.shape[0], 1))
@@ -153,19 +152,33 @@ class LOGREG(object):
         :return: the hessian matrix (second derivative of the model parameters)
         '''
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
-
-        # ======================================================================================================
         # Hessian: Concave Likelihood (page 32)
-        regularizationTerm = self.r
         [m, n] = X.shape
         temp = np.zeros((n, n))
+
         for i in range(n):
             xiReshape = X[:, i].reshape((m, 1))
             factor1 = self.activationFunction(w, xiReshape)
             factor2 = 1 - self.activationFunction(w, xiReshape)
             temp[i][i] = factor1 * factor2
+
         hessian = np.dot(X, temp)
         hessian = np.dot(hessian, X.transpose())
+
+        # Regularization:
+        # As for the Hessian derivation, you must perform the
+        # derivation yourself, then construct a regularization matrix to add to your previously defined
+        # Hessian matrix. Tip: The regularization matrix is a diagonal matrix with the same shape
+        # as the Hessian. The first entry of the matrix must be explicitly set to zero, as it represents
+        # the w0 term which should not be regularized.
+        # Second derivative of regularization: d/dw.T 1/sigma^2 * w.T = 1/sigma^2
+        regularizationTerm = np.zeros((hessian.shape))
+
+        for i in range(regularizationTerm.shape[0]):
+            regularizationTerm[i][i] = 2 * self.r
+
+        # Setting first entry to 0
+        regularizationTerm[0][0] = 0
 
         return hessian + regularizationTerm
 
