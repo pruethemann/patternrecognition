@@ -91,6 +91,7 @@ class LOGREG(object):
         # TODO: Implement logistic function
 
         # The Logistic Regression Posterior (page 19)
+        # TODO: w0?
         return 1 / (1 + np.exp(-(np.dot(w.transpose(), X))))
 
     def _costFunction(self, w: np.ndarray, X: np.ndarray, y: np.ndarray) -> float:
@@ -102,15 +103,16 @@ class LOGREG(object):
         :return: cost
         '''
         # TODO: Implement equation of cost function for posterior p(y=1|X,w)
-        # Maximum Likelihood Estimate of w (page 26 resp. page 38)
+        # Maximum Likelihood Estimate of w / MAP Learning (page 26 resp. page 38)
         cost = 0
+
+        # TODO: w0?
         for i in range(X.shape[1]):
             # cost += y[i] * np.dot(w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
-            # factor = y[i] * w.transpose()
             cost += np.dot(y[i] * w.transpose(), X[:, i]) - np.log(1 + np.exp(np.dot(w.transpose(), X[:, i])))
 
         # Regularization: cost = cost - 1/(2*sigma^2) * ||w||^2
-        regularizationTerm = self.r * np.linalg.norm(w)**2
+        regularizationTerm = self.r * (np.linalg.norm(w)*np.linalg.norm(w))
         return cost - regularizationTerm
 
     def _calculateDerivative(self, w: np.ndarray, X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -122,25 +124,24 @@ class LOGREG(object):
         :return: first derivative of the model parameters
         '''
         # TODO: Calculate derivative of loglikelihood function for posterior p(y=1|X,w)
-        # Maximum Likelihood Estimate of w (page 29 and page 38). Derivative shape = (3, 1)
+        # Maximum Likelihood Estimate of w / MAP Learning (page 29 resp. page 38). Derivative shape: (3, 1)
 
-        # Try No. 1
+        # Try No. 1 (no regularization)
         # firstDerivative = np.zeros((1, 3))
         # for i in range(len(y)):
         #     factor1 = (y[i] - self.activationFunction(w, X[:, i])).reshape((1, 1))
         #     factor2 = X[:, i].reshape((3, 1)).transpose()
         #     firstDerivative += np.dot(factor1, factor2)
-        #
         # return firstDerivative.transpose()
 
-        # Try No. 2
+        # Try No. 2 (sum as dot-product)
         y = y.reshape(y.shape[0], 1)
         firstDerivative = np.dot(X, (np.reshape(self.activationFunction(w, X), (X.shape[1], 1)) - y.reshape((-1, 1))))
 
         # Regularization: derivative = derivative - 1/sigma^2 * w.T
         regularizationTerm = (2 * self.r * w.transpose()).reshape((X.shape[0], 1))
 
-        return firstDerivative + regularizationTerm
+        return firstDerivative - regularizationTerm
 
     def _calculateHessian(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
         '''
@@ -149,32 +150,33 @@ class LOGREG(object):
         :return: the hessian matrix (second derivative of the model parameters)
         '''
         # TODO: Calculate Hessian matrix of loglikelihood function for posterior p(y=1|X,w)
-        # Hessian: Concave Likelihood (page 32)
+        # Hessian: Concave Likelihood (page 32), Hessian shape: (3, 3)
         [m, n] = X.shape
         temp = np.zeros((n, n))
 
+        # We only need the diagonal:
         for i in range(n):
-            xiReshape = X[:, i].reshape((m, 1))
-            factor1 = self.activationFunction(w, xiReshape)
-            factor2 = 1 - self.activationFunction(w, xiReshape)
+            xiReshaped = X[:, i].reshape((m, 1))
+            factor1 = self.activationFunction(w, xiReshaped)
+            factor2 = 1 - self.activationFunction(w, xiReshaped)
             temp[i][i] = factor1 * factor2
 
         hessian = np.dot(X, temp)
         hessian = np.dot(hessian, X.transpose())
 
         # Regularization:
-        # As for the Hessian derivation, you must perform the
+        # "As for the Hessian derivation, you must perform the
         # derivation yourself, then construct a regularization matrix to add to your previously defined
         # Hessian matrix. Tip: The regularization matrix is a diagonal matrix with the same shape
         # as the Hessian. The first entry of the matrix must be explicitly set to zero, as it represents
-        # the w0 term which should not be regularized.
+        # the w0 term which should not be regularized."
         # Second derivative of regularization: d/dw.T 1/sigma^2 * w.T = 1/sigma^2
-        regularizationTerm = np.zeros((hessian.shape))
+        regularizationTerm = np.zeros(hessian.shape)
 
         for i in range(regularizationTerm.shape[0]):
             regularizationTerm[i][i] = 2 * self.r
 
-        # Setting first entry to 0
+        # Setting first entry to 0 (w0)
         regularizationTerm[0][0] = 0
 
         return hessian + regularizationTerm
@@ -206,14 +208,14 @@ class LOGREG(object):
             posteriorloglikelihood = self._costFunction(w, X, y)
             if self.r == 0:
                 # TODO: What happens if this condition is removed?
-                # Cannot test with regularization = 0
+                # TODO: This condition never triggers! Final likelihood too small...
                 if np.exp(posteriorloglikelihood) > 0.99:
                     print('posterior > 0.99, breaking optimization at niter = ', i)
                     break
 
             if self.r > 0:
                 # TODO: What happens if this condition is removed?
-                #
+                # TODO: This condition never triggers! Final likelihood too small...
                 if np.exp(posteriorloglikelihood) - np.exp(oldposteriorloglikelihood) < 0:  # posterior is decreasing
                     print('negative loglikelihood increasing, breaking optimization at niter = ', i)
                     posteriorloglikelihood = oldposteriorloglikelihood
@@ -221,7 +223,8 @@ class LOGREG(object):
                     break
             # TODO: Implement convergenc check based on when w_update is close to zero
             # Note: You can make use of the class threshold value self._threshold
-            if np.sum(np.abs(w_update)):
+            if np.sum(np.abs(w_update)) < self._threshold:
+                print("BREAK - update < Threshold")
                 break
 
         print('final posteriorloglikelihood', posteriorloglikelihood, 'final likelihood',
