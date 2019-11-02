@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from scipy.linalg import norm
 import cvxopt as cvx
 
-
 class SVM(object):
     '''
     SVM class
@@ -14,19 +13,20 @@ class SVM(object):
         self.__TOL = 1e-5
 
     def __linearKernel__(self, x1: np.ndarray, x2: np.ndarray, _) -> float:
-        # TODO: Implement linear kernel function
+        # Implement linear kernel function
         # @x1 and @x2 are vectors
-        return ???
+        return np.dot(x1.T, x2)
 
     def __polynomialKernel__(self, x1: np.ndarray, x2: np.ndarray, p: int) -> float:
-        # TODO: Implement polynomial kernel function
+        # Implement polynomial kernel function
         # @x1 and @x2 are vectors
-        return ???
+        return (np.dot(x1.T, x2) + 1)**p
 
     def __gaussianKernel__(self, x1: np.ndarray, x2: np.ndarray, sigma: float) -> float:
-        # TODO: Implement gaussian kernel function
+        # Implement gaussian kernel function
         # @x1 and @x2 are vectors
-        return ???
+        norm = np.linalg.norm(x1 - x2)
+        return np.exp( - norm**2 / (2*sigma**2)  )
 
     def __computeKernelMatrix__(self, x: np.ndarray, kernelFunction, pars) -> np.ndarray:
         # TODO: Implement function to compute the kernel matrix
