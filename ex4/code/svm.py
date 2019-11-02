@@ -1,7 +1,7 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.linalg import norm
 import cvxopt as cvx
+import numpy as np
+from scipy.linalg import norm
+
 
 class SVM(object):
     '''
@@ -25,8 +25,7 @@ class SVM(object):
     def __gaussianKernel__(self, x1: np.ndarray, x2: np.ndarray, sigma: float) -> float:
         # Implement gaussian kernel function
         # @x1 and @x2 are vectors
-        norm = np.linalg.norm(x1 - x2)
-        return np.exp( - norm**2 / (2*sigma**2)  )
+        return np.exp( - norm(x1 - x2)**2 / (2*sigma**2)  )
 
     def __computeKernelMatrix__(self, x: np.ndarray, kernelFunction, pars) -> np.ndarray:
         # TODO: Implement function to compute the kernel matrix
@@ -41,33 +40,40 @@ class SVM(object):
 
         NUM = x.shape[1]
 
+        ## i dont know what to do
+        cvx.solvers.options['show_progress'] = False
+        cvx.matrix()
+
+        solution = cvx.solvers.qp(P, q, G,h,A, b)
+        lambdas = solution['x']
+
         # we'll solve the dual
         # obtain the kernel
         if kernel == 'linear':
             # TODO: Compute the kernel matrix for the non-linear SVM with a linear kernel
             print('Fitting SVM with linear kernel')
-            K = ???
+            K = 0
             self.kernel = self.__linearKernel__
         elif kernel == 'poly':
             # TODO: Compute the kernel matrix for the non-linear SVM with a polynomial kernel
             print('Fitting SVM with Polynomial kernel, order: {}'.format(kernelpar))
-            K = ???
+            K = 0
         elif kernel == 'rbf':
             # TODO: Compute the kernel matrix for the non-linear SVM with an RBF kernel
             print('Fitting SVM with RBF kernel, sigma: {}'.format(kernelpar))
-            K = ???
-        else:
+            K = 0
+        else: # Toy example
             print('Fitting linear SVM')
             # TODO: Compute the kernel matrix for the linear SVM
-            K = ???
+            K = 0
 
         if self.C is None:
-            G = ???
-            h = ???
+            G = 0
+            h = 0
         else:
             print("Using Slack variables")
-            G = ???
-            h = ???
+            G = 0
+            h = 0
 
 
         # TODO: Compute below values according to the lecture slides
@@ -96,10 +102,13 @@ class SVM(object):
         '''
         Classify data given the trained linear SVM - access the SVM parameters through self.
         :param x: Data to be classified
-        :return: List of classification values (-1.0 or 1.0)
+        :return: Array of classification values (-1.0 or 1.0)
         '''
-        # TODO: Implement
-        return ???
+        # Implement
+        classified = np.dot(self.w.T, x) + self.bias
+        classified = (classified > 0).astype(int)
+        classified = np.where(classified == 0, -1, classified)
+        return classified
 
     def printLinearClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
         '''
@@ -114,10 +123,11 @@ class SVM(object):
         '''
         Classify data given the trained kernel SVM - use self.kernel and self.kernelpar to access the kernel function and parameter
         :param x: Data to be classified
-        :return: List of classification values (-1.0 or 1.0)
+        :return: Array (1D) of classification values (-1.0 or 1.0)
         '''
         # TODO: Implement
-        return ???
+
+        return 0
 
     def printKernelClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
         '''
