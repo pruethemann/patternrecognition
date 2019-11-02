@@ -1,6 +1,7 @@
 import cvxopt as cvx
 import numpy as np
 from scipy.linalg import norm
+import sys
 
 
 class SVM(object):
@@ -33,53 +34,187 @@ class SVM(object):
         # @kernelFunction - pass a kernel function (gauss, poly, linear) to this input
         # @pars - pass the possible kernel function parameter to this input
         return K
+    
+    def build_kernel(self,X):
+        self.K = np.dot(X,X.T)
+
+
+    
+    def train_N(self,X,targets):
+        
+        X = X.T
+        
+        self.N = np.shape(X)[0]
+        print("hoch")
+        print(self.N)
+        self.build_kernel(X)
+        print(self.N)
+        
+        print(self.K.shape)
+
+
+        print("HERE")
+        print(X.shape)
+        print(self.K.shape)
+        print(targets.shape)    
+                
+       # sys.exit()  
+        # Assemble the matrices for the constraints
+        P = targets*targets.transpose()*self.K
+       
+#        P = np.dot(np.dot(targets, targets.T), self.K)        
+        q = -np.ones((self.N,1))
+        if self.C is None:
+            G = -np.eye(self.N)
+            h = np.zeros((self.N,1))
+        else:
+            G = np.concatenate((np.eye(self.N),-np.eye(self.N)))
+            h = np.concatenate((self.C*np.ones((self.N,1)),np.zeros((self.N,1))))
+        A = targets.reshape(1,self.N)
+        b = 0.0
+
+        # Call the quadratic solver
+        sol = cvx.solvers.qp(cvx.matrix(P),cvx.matrix(q),cvx.matrix(G),cvx.matrix(h), cvx.matrix(A), cvx.matrix(b))
+
+        # Get the Lagrange multipliers out of the solution dictionary
+        lambdas = np.array(sol['x'])
+        
+        print(lambdas)
+
+        # Find the (indices of the) support vectors, which are the vectors with non-zero Lagrange multipliers
+        self.sv = np.where(lambdas>self.__TOL)[0]
+        self.nsupport = len(self.sv)
+        print (self.nsupport, "support vectors found" )
+
+        # Just retain the data corresponding to the support vectors
+        self.X = X[self.sv,:]
+        self.lambdas = lambdas[self.sv]
+        print(self.lambdas)
+        self.targets = targets[self.sv]
+
+            #self.b = np.sum(self.targets)
+            #for n in range(self.nsupport):
+            #self.b -= np.sum(self.lambdas*self.targets.T*np.reshape(self.K[self.sv[n],self.sv],(self.nsupport,1)))
+            #self.b /= len(self.lambdas)
+        #print "b=",self.b
+
+        self.b = np.sum(self.targets)
+        for n in range(self.nsupport):
+            self.b -= np.sum(self.lambdas*self.targets*np.reshape(self.K[self.sv[n],self.sv],(self.nsupport,1)))
+            self.b /= len(self.lambdas)
+        #print "b=",self.b
+
+        #bb = 0
+        #for j in range(self.nsupport):
+            #tally = 0    
+            #for i in range(self.nsupport):
+                #tally += self.lambdas[i]*self.targets[i]*self.K[self.sv[j],self.sv[i]]
+            #bb += self.targets[j] - tally
+        #self.bb = bb/self.nsupport
+        #print self.bb
+                
+        if self.kernel == 'poly':
+            def classifier(Y,soft=False):
+                K = (1. + 1./self.sigma*np.dot(Y,self.X.T))**self.degree
+
+                self.y = np.zeros((np.shape(Y)[0],1))
+                for j in range(np.shape(Y)[0]):
+                    for i in range(self.nsupport):
+                        self.y[j] += self.lambdas[i]*self.targets[i]*K[j,i]
+                    self.y[j] += self.b
+                
+                if soft:
+                    return self.y
+                else:
+                    return np.sign(self.y)
+    
+        elif self.kernel == 'rbf':
+            def classifier(Y,soft=False):
+                K = np.dot(Y,self.X.T)
+                c = (1./self.sigma * np.sum(Y**2,axis=1)*np.ones((1,np.shape(Y)[0]))).T
+                c = np.dot(c,np.ones((1,np.shape(K)[1])))
+                aa = np.dot(self.xsquared[self.sv],np.ones((1,np.shape(K)[0]))).T
+                K = K - 0.5*c - 0.5*aa
+                K = np.exp(K/(2.*self.sigma**2))
+
+                self.y = np.zeros((np.shape(Y)[0],1))
+                for j in range(np.shape(Y)[0]):
+                    for i in range(self.nsupport):
+                        self.y[j] += self.lambdas[i]*self.targets[i]*K[j,i]
+                    self.y[j] += self.b
+
+                if soft:
+                    return self.y
+                else:
+                    return np.sign(self.y)
+        else:
+            print( "Error -- kernel not recognised")
+            return
+
+        self.classifier = classifier    
+
 
     def train(self, x: np.ndarray, y: np.ndarray, kernel=None, kernelpar=2) -> None:
         # TODO: Implement the remainder of the svm training function
         self.kernelpar = kernelpar
-
-        NUM = x.shape[1]
-
-        ## i dont know what to do
-        cvx.solvers.options['show_progress'] = False
-        cvx.matrix()
-
-        solution = cvx.solvers.qp(P, q, G,h,A, b)
-        lambdas = solution['x']
+        x = x.T
+        NUM = x.shape[0]
 
         # we'll solve the dual
         # obtain the kernel
+        ## Todo update K expect for else
         if kernel == 'linear':
             # TODO: Compute the kernel matrix for the non-linear SVM with a linear kernel
             print('Fitting SVM with linear kernel')
-            K = 0
+            K = np.dot(x,x.T)
             self.kernel = self.__linearKernel__
         elif kernel == 'poly':
             # TODO: Compute the kernel matrix for the non-linear SVM with a polynomial kernel
             print('Fitting SVM with Polynomial kernel, order: {}'.format(kernelpar))
-            K = 0
+            K = np.dot(x,x.T)
         elif kernel == 'rbf':
             # TODO: Compute the kernel matrix for the non-linear SVM with an RBF kernel
             print('Fitting SVM with RBF kernel, sigma: {}'.format(kernelpar))
-            K = 0
+            K = np.dot(x,x.T)
         else: # Toy example
             print('Fitting linear SVM')
             # TODO: Compute the kernel matrix for the linear SVM
-            K = 0
+            K = np.dot(x,x.T)
 
         if self.C is None:
-            G = 0
-            h = 0
+            G = -np.eye(NUM)
+            h = np.zeros((NUM,1))
         else:
             print("Using Slack variables")
-            G = 0
-            h = 0
-
+            ## ToDO to do update
+            G = -np.eye(NUM)
+            h = np.zeros((NUM,1))
+      
+        #cvx.solvers.options['show_progress'] = False
+        K = np.dot(x, x.T)       
+        A = y.reshape(1, NUM)
+        b = 0.0
+     #   P = np.dot(np.dot(y,y.T) , K)
+        P = y * y.transpose() * K
+        print(P.shape)
+        P = cvx.matrix(P)
+        q = -np.ones((NUM, 1))
+        q = cvx.matrix(q)
+        G = cvx.matrix(G)
+        h = cvx.matrix(h)
+        A = cvx.matrix(A)
+        b = cvx.matrix(b)
+        sol = cvx.solvers.qp(P,q,G,h,A,b)
+        lambdas = np.array(sol['x'])
+        print(f'Lambdas {lambdas}')
 
         # TODO: Compute below values according to the lecture slides
-        self.lambdas = None # Only save > 0
-        self.sv = None # List of support vectors
-        self.sv_labels = None # List of labels for the support vectors (-1 or 1 for each support vector)
+        self.lambdas =  lambdas[lambdas>self.__TOL] # Only save > 0        
+        print(f'Lambdas >0 {self.lambdas}')
+        self.sv = np.where(lambdas>self.__TOL)[0] # List of support vectors
+        print(f'Vectors {self.sv}')   
+        self.sv_labels = y[self.sv] # List of labels for the support vectors (-1 or 1 for each support vector)
+        print(f'Vectors {self.sv_labels}')           
         if kernel is None:
           self.w = None # SVM weights used in the linear SVM
           # Use the mean of all support vectors for stability when computing the bias (w_0)
@@ -90,12 +225,12 @@ class SVM(object):
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
           self.bias = None # Bias
 
-        # TODO: Implement the KKT check
-        self.__check__()
+        # Implement the KKT check
+#        self.__check__()
 
     def __check__(self) -> None:
         # Checking implementation according to KKT2 (Linear_classifiers slide 46)
-        kkt2_check = None
+        kkt2_check = np.sum(np.dot(self.lambdas, self.sv_labels))
         assert kkt2_check < self.__TOL, 'SVM check failed - KKT2 condition not satisfied'
 
     def classifyLinear(self, x: np.ndarray) -> np.ndarray:
