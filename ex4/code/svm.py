@@ -40,7 +40,7 @@ class SVM(object):
 
 
     
-    def train(self,X,targets):
+    def train_M(self,X,targets):
         
         X = X.T
         
@@ -82,7 +82,7 @@ class SVM(object):
         print(lambdas)
 
         # Find the (indices of the) support vectors, which are the vectors with non-zero Lagrange multipliers
-        self.sv = np.where(lambdas>self.__TOL)[0]
+        self.sv = np.where(lambdas>self.__TOL)#[0]
         self.nsupport = len(self.sv)
         print (self.nsupport, "support vectors found" )
 
@@ -166,16 +166,16 @@ class SVM(object):
         if kernel == 'linear':
             # TODO: Compute the kernel matrix for the non-linear SVM with a linear kernel
             print('Fitting SVM with linear kernel')
-            K = np.dot(x,x.T)
+            K = 0
             self.kernel = self.__linearKernel__
         elif kernel == 'poly':
             # TODO: Compute the kernel matrix for the non-linear SVM with a polynomial kernel
             print('Fitting SVM with Polynomial kernel, order: {}'.format(kernelpar))
-            K = np.dot(x,x.T)
+            K = 0
         elif kernel == 'rbf':
             # TODO: Compute the kernel matrix for the non-linear SVM with an RBF kernel
             print('Fitting SVM with RBF kernel, sigma: {}'.format(kernelpar))
-            K = np.dot(x,x.T)
+            K = 0
         else: # Toy example
             print('Fitting linear SVM')
             # TODO: Compute the kernel matrix for the linear SVM
@@ -187,16 +187,15 @@ class SVM(object):
         else:
             print("Using Slack variables")
             ## ToDO to do update
-            G = -np.eye(NUM)
-            h = np.zeros((NUM,1))
+            G = 0
+            h = 0
       
         cvx.solvers.options['show_progress'] = False
         K = np.dot(x, x.T)       
         A = y.reshape(1, NUM)
         b = 0.0
-     #   P = np.dot(np.dot(y,y.T) , K)
         P = y * y.transpose() * K
-        print(P.shape)
+
         P = cvx.matrix(P)
         q = -np.ones((NUM, 1))
         q = cvx.matrix(q)
@@ -210,33 +209,36 @@ class SVM(object):
         lambdas = np.array(solution['x'])
 
         ######
-        # TODO: Compute below values according to the lecture slides
+        # Compute below values according to the lecture slides
         self.lambdas = lambdas[lambdas>self.__TOL]  # Only save > 0
 
-
-        self.sv = np.where(lambdas>self.__TOL)[0] # List of support vectors
-        #print(f'sv: {self.sv}')
-        #print(f'y: {y}')
-        self.sv_labels = y.T[self.sv] # List of labels for the support vectors (-1 or 1 for each support vector)
+        # List of support vectors
+        self.sv = np.where(lambdas>self.__TOL)[0]
+        # List of labels for the support vectors (-1 or 1 for each support vector)
+        self.sv_labels = y.T[self.sv]
         print(f'labels: {self.sv_labels}')
 
-        ## reduce x to important close points
+        ## reduce data to important close points
         x = x[self.sv, :]
 
         if kernel is None:
             # SVM weights used in the linear SVM
-            # Use the mean of all support vectors for stability when computing the bias (w_0)
-            self.w = np.sum(self.sv_labels)
-            for n in range(len(self.sv)):
-                self.w -= np.sum(self.lambdas*self.sv_labels*np.reshape(K[self.sv[n],self.sv],(len(self.sv),1)))
 
-            self.w /= len(self.lambdas)
-
+            w = np.linalg.inv(np.dot(x.T , x))
+            w = np.dot(w, x.T)
+            self.w = np.dot(w, self.sv_labels)
             print(f'w {self.w}')
 
+
             ## bias = f(x)- wT * x
-            self.bias = np.sum(self.sv_labels - self.w * x )# Bias
+            # Use the mean of all support vectors for stability when computing the bias (w_0)
+            self.bias = 0 #np.sum(self.sv_labels - self.w * x )# Bias
+            print(self.w.T.shape)
+            print(x.shape)
+            self.bias = self.sv_labels - np.dot(self.w.T, np.sum(x.T))
             print(f'Bias {self.bias}')
+
+        ## toDO implement kernel
         else:
           self.w = 0
           # Use the mean of all support vectors for stability when computing the bias (w_0).
@@ -259,7 +261,7 @@ class SVM(object):
         :return: Array of classification values (-1.0 or 1.0)
         '''
         # Implement
-        classified = np.dot(self.w.T, x) + self.bias
+        classified = np.dot(self.w.T, x) + 0 #self.bias
         classified = (classified > 0).astype(int)
         classified = np.where(classified == 0, -1, classified)
         return classified
@@ -271,7 +273,24 @@ class SVM(object):
         :param y: Ground truth labels
         '''
         # TODO: Implement
+        classified = self.classifyLinear(x)
+
+
+        #print(f'classified {classified}')
+        #print(f'y {y}')
+        (_, N) = y.shape
+        #easy solution to get error
+        result = np.abs(np.sum(y-classified)/2) / N
+
+        ## for loop for error
+
         result = 0
+        for i in range(N):
+            if (y[0][i] != classified[0][i]):
+                result += 1
+
+        result /= N
+
         print("Total error: {:.2f}%".format(result))
 
     def classifyKernel(self, x: np.ndarray) -> np.ndarray:
