@@ -8,7 +8,7 @@ import scipy.io as scio
 from svm import SVM
 from plotting_helper import plot_data, plot_kernel_separator
 
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 
 dataPath = '../data/'
 
@@ -38,12 +38,14 @@ def svmKernelToyExample() -> None:
     plt.show()
 
     # TODO: Train svm
-    svm = ???
+    svm = SVM()
+    svm.train(train_x, train_label, kernel = 'linear')
 
     print("Training error")
-    # TODO: Compute training error of SVM
+    svm.printKernelClassificationError(train_x, train_label)
+
     print("Test error")
-    # TODO: Compute test error of SVM
+    svm.printKernelClassificationError(train_x, train_label)
 
     print("Visualizing data")
     # TODO: Visualize data and separation boundary - hint: you can use the given "plot_kernel_separator" and the "plot_data" functions

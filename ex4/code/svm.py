@@ -29,59 +29,54 @@ class SVM(object):
         return np.exp( - norm(x1 - x2)**2 / (2*sigma**2)  )
 
     def __computeKernelMatrix__(self, x: np.ndarray, kernelFunction, pars) -> np.ndarray:
-        # TODO: Implement function to compute the kernel matrix
+        # Implement function to compute the kernel matrix
         # @x is the data matrix
-        # @kernelFunction - pass a kernel function (gauss, poly, linear) to this input
+        # @kernelFunction - pass a kernel function (gauss, poly, linear) to this input (Closures)
         # @pars - pass the possible kernel function parameter to this input
 
-        ## toDo: understand
-        n, m = x.shape
-        K = np.zeros((m, m))
-        for i in range(m):
-            for j in range(m):
+        _, M = x.shape
+        K = np.zeros((M, M))
+        for i in range(M):
+            for j in range(M):
                 K[i, j] = kernelFunction(x[:, i], x[:, j], pars)
-
 
         return K
     
-    def build_kernel(self,X):
-        self.K = np.dot(X,X.T)
-
-
     def train(self, x: np.ndarray, y: np.ndarray, kernel=None, kernelpar=2) -> None:
-        # TODO: Implement the remainder of the svm training function
+        # Implement the remainder of the svm training function
         self.kernelpar = kernelpar
-        ## I somehow did it the transposed way
-        #x = x.T
+
         NUM = x.shape[1]
 
-        # we'll solve the dual
-        # obtain the kernel
-        ## Todo update K expect for else
+        # we'll solve the dual, obtain the kernel
         if kernel == 'linear':
-            # TODO: Compute the kernel matrix for the non-linear SVM with a linear kernel
+            # Compute the kernel matrix for the non-linear SVM with a linear kernel
             print('Fitting SVM with linear kernel')
-            K = self.__computeKernelMatrix__(x, self.__linearKernel__(), None)
+            K = self.__computeKernelMatrix__(x, self.__linearKernel__, None)
             self.kernel = self.__linearKernel__
+
         elif kernel == 'poly':
             # TODO: Compute the kernel matrix for the non-linear SVM with a polynomial kernel
             print('Fitting SVM with Polynomial kernel, order: {}'.format(kernelpar))
             K = self.__computeKernelMatrix__(x, self.__polynomialKernel__, kernelpar)
+
         elif kernel == 'rbf':
             # TODO: Compute the kernel matrix for the non-linear SVM with an RBF kernel
             print('Fitting SVM with RBF kernel, sigma: {}'.format(kernelpar))
             K = self.__computeKernelMatrix__(x, self.__gaussianKernel__, kernelpar)
+
         else: # Toy example
             print('Fitting linear SVM')
-            # TODO: Compute the kernel matrix for the linear SVM
+            # Compute the kernel matrix for the linear SVM
             K = self.__computeKernelMatrix__(x, self.__linearKernel__, None)
 
         if self.C is None:
             G = -np.eye(NUM)
             h = np.zeros((NUM))
+
+        ## Soft margin
         else:
             print("Using Slack variables")
-            ## ToDO to do update
             identity_matrix = np.eye(NUM)
             G = np.vstack((-identity_matrix, identity_matrix))
             h = np.hstack((np.zeros(NUM), np.ones(NUM) * self.C))
@@ -117,6 +112,7 @@ class SVM(object):
         self.sv_labels = y[0, index]
 
         sv_count = self.sv.shape[1]
+        print(f'Amount of sv: {sv_count}')
 
         if kernel is None:
             ### WEIGHT
@@ -129,16 +125,22 @@ class SVM(object):
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
             self.w = 0
             for i in range(sv_count):
-                self.w += self.lambdas[i] * self.sv_labels[i] * self.k[:, i]
+                self.w += self.lambdas[i] * self.sv_labels[i] * K[:, i]
 
         ### BIAS
-        self.bias = 0
         # get mean of all sv axis=1 sums up only rows # Use the mean of all support vectors for stability when computing the bias (w_0)
-        mean = np.sum(self.sv, axis=1)
 
-        mean = np.array([mean / self.lambdas.shape[0]]).T
+       # print(self.sv)
+        mean = np.mean(self.sv, axis=1)
+
+        print(self.sv_labels.shape)
+        print(np.ravel(self.w).shape)
+        print(mean.shape)
+
         # Calculate weight. Lecture 6, Slide 25
-        self.bias = self.sv_labels[0] - np.dot(np.array(self.w).T, mean)
+        self.bias = self.sv_labels[0] - np.dot(np.array(self.w), mean)
+
+       # self.bias = self.sv_labels - np.dot(self.w, mean)
         #print(f'Bias {self.bias}')
 
         # check implementation with KKT2 check
@@ -148,7 +150,7 @@ class SVM(object):
         # Checking implementation according to KKT2 (Linear_classifiers slide 46)
         kkt2_check = np.sum(np.dot(self.lambdas, self.sv_labels))
         #kkt2_check = np.dot(self.lambdas, self.sv_labels)
-        #print(f'kkt {kkt2_check}')
+        print(f'kkt {kkt2_check}')
         assert kkt2_check < self.__TOL, 'SVM check failed - KKT2 condition not satisfied'
 
     def classifyLinear(self, x: np.ndarray) -> np.ndarray:
@@ -179,7 +181,7 @@ class SVM(object):
 
         (_, N) = y.shape
         diff = y-classified
-        #print(diff)
+
         result = 0
         for i in range(N):
             if diff[0][i] != 0:
@@ -192,9 +194,21 @@ class SVM(object):
         :param x: Data to be classified
         :return: Array (1D) of classification values (-1.0 or 1.0)
         '''
-        # TODO: Implement
 
-        return 0
+        ## calculate according to Exercise sheet
+        f = self.bias + np.dot( np.dot(self.lambdas, self.sv_labels), self.k)
+        classifications = []
+        for i in range(g.shape[1]):
+            classifications.append(np.sign(g[0, i]))
+        print(classifications)
+
+        # binary classifcation in 0 / 1
+        classifications = (f > 0).astype(int)
+
+        ## Replace all values 0 -> -1 , keep the rest
+        classified = np.where(classifications == 0, -1, classifications)
+
+        return classifications
 
     def printKernelClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
         '''
@@ -203,4 +217,5 @@ class SVM(object):
         :param y: Ground truth labels
         '''
         # TODO: Implement
+        result = 0
         print("Total error: {:.2f}%".format(result))

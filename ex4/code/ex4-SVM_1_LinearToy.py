@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from svm import SVM
 from plotting_helper import plot_data, plot_linear_separator
 
-matplotlib.use('TkAgg')
+## just plot it in PyCharm
+#matplotlib.use('TkAgg')
 
 dataPath = '../data/'
 
@@ -20,7 +21,7 @@ def svmLinearToyExample() -> None:
      - Print training and test error
      - Plot data and separator
     '''
-    C = None
+    C = 1000
 
     toy = scipy.io.loadmat(dataPath + 'toy.mat')
     toy_train = toy['toy_train']
