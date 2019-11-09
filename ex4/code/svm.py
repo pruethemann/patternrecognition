@@ -82,18 +82,18 @@ class SVM(object):
         else:
             print("Using Slack variables")
             ## ToDO to do update
+            identity_matrix = np.eye(NUM)
             G = np.vstack((-identity_matrix, identity_matrix))
             h = np.hstack((np.zeros(NUM), np.ones(NUM) * self.C))
-      
-        cvx.solvers.options['show_progress'] = False
-       # K = np.dot(x, x.T)
-        #A = y.reshape(0, NUM)
-        A = cvx.matrix(y)
-        b = 0.0
-        P = y * y.transpose() * K
 
-        P = cvx.matrix(P)
+        ## Calculate all matrices for cvx.solver
+        P = y * y.transpose() * K
+        A = cvx.matrix(y)
         q = -np.ones((NUM, 1))
+        b = 0.0
+
+        ## transform to matrix
+        P = cvx.matrix(P)
         q = cvx.matrix(q)
         G = cvx.matrix(G)
         h = cvx.matrix(h)
@@ -101,11 +101,11 @@ class SVM(object):
         b = cvx.matrix(b)
 
         ## Execute cvx solver and retrieve all lambdas
+        cvx.solvers.options['show_progress'] = False
         solution = cvx.solvers.qp(P,q,G,h,A,b)
         ## extract lambdas. Ugly trick over transpose to reduce dimensions
         lambdas = np.array(solution['x']).T[0]
 
-        ######
         # Compute below values according to the lecture slides
         # Extract lambdas which are > 0
         self.lambdas = lambdas[lambdas>self.__TOL]
@@ -125,11 +125,10 @@ class SVM(object):
             for i in range(sv_count):
                 self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]  # SVM weights used in the linear SVM
 
-        ## toDO implement kernel
-        else:
+        else: # Kernel
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
             self.w = 0
-            for i in range(self.sv.shape[1]):
+            for i in range(sv_count):
                 self.w += self.lambdas[i] * self.sv_labels[i] * self.k[:, i]
 
         ### BIAS
@@ -140,7 +139,7 @@ class SVM(object):
         mean = np.array([mean / self.lambdas.shape[0]]).T
         # Calculate weight. Lecture 6, Slide 25
         self.bias = self.sv_labels[0] - np.dot(np.array(self.w).T, mean)
-        print(f'Bias {self.bias}')
+        #print(f'Bias {self.bias}')
 
         # check implementation with KKT2 check
         self.__check__()
@@ -158,10 +157,15 @@ class SVM(object):
         :param x: Data to be classified
         :return: Array of classification values (-1.0 or 1.0)
         '''
-        # Implement
-        classified = np.dot(self.w.T, x) + 0 #self.bias
+        # Classify data along hyperplane
+        classified = np.dot(self.w.T, x) + self.bias
+
+        # binary classifcation in 0 / 1
         classified = (classified > 0).astype(int)
+
+        ## Replace all values 0 -> -1 , keep the rest
         classified = np.where(classified == 0, -1, classified)
+
         return classified
 
     def printLinearClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -172,8 +176,6 @@ class SVM(object):
         '''
         # Implement
         classified = self.classifyLinear(x)
-
-        print(classified)
 
         (_, N) = y.shape
         diff = y-classified
