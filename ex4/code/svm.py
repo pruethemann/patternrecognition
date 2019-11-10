@@ -59,16 +59,19 @@ class SVM(object):
             # TODO: Compute the kernel matrix for the non-linear SVM with a polynomial kernel
             print('Fitting SVM with Polynomial kernel, order: {}'.format(kernelpar))
             K = self.__computeKernelMatrix__(x, self.__polynomialKernel__, kernelpar)
+            self.kernel = self.__polynomialKernel__
 
         elif kernel == 'rbf':
             # TODO: Compute the kernel matrix for the non-linear SVM with an RBF kernel
             print('Fitting SVM with RBF kernel, sigma: {}'.format(kernelpar))
             K = self.__computeKernelMatrix__(x, self.__gaussianKernel__, kernelpar)
+            self.kernel = self.__gaussianKernel__
 
         else: # Toy example
             print('Fitting linear SVM')
             # Compute the kernel matrix for the linear SVM
             K = self.__computeKernelMatrix__(x, self.__linearKernel__, None)
+            self.kernel = self.__linearKernel__
 
         if self.C is None:
             G = -np.eye(NUM)
@@ -120,24 +123,27 @@ class SVM(object):
             for i in range(sv_count):
                 self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]
 
+            ### BIAS
+            self.bias = 0
+            for i in range(sv_count):
+                self.bias += self.lambdas[i] * self.sv_labels[i]  # SVM weights used in the linear SVM
+
         else: # Kernel
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
             self.w = 0
             for i in range(sv_count):
                 self.w += self.lambdas[i] * self.sv_labels[i] * K[:, i]
 
-        ## Dimenstion testing
+            ### BIAS
+            self.bias = 0
+            for i in range(sv_count):
+                self.bias += self.lambdas[i] * self.sv_labels[i]  * K[:, i] # SVM weights used in the linear SVM
 
         ### BIAS
         # get mean of all sv axis=1 sums up only rows # Use the mean of all support vectors for stability when computing the bias (w_0)
         sv_mean = np.mean(self.sv, axis=1)
         w_mean = np.mean(self.w, axis=0)
 
-
-        self.bias = 0
-
-        for i in range(sv_count):
-            self.bias += self.lambdas[i] * self.sv_labels[i]  # SVM weights used in the linear SVM
         # check implementation with KKT2 check
         self.__check__()
 
@@ -189,20 +195,17 @@ class SVM(object):
         :return: Array (1D) of classification values (-1.0 or 1.0)
         '''
 
-        ## calculate according to Exercise sheet
-        sv_count = self.sv.shape[1]
-        f= 0
-        for i in range(sv_count):
-            f = self.lambdas[i]* self.sv_labels[i] * self.k
+        classified =  self.__computeKernelMatrix__(x, self.__linearKernel__, self.kernelpar)
 
-        f = self.bias + f
+        # binary classifcation in 0 / 1
+        classified = (classified > 0).astype(int)
 
-        classifications = []
-        for i in range(g.shape[1]):
-            classifications.append(np.sign(f[0, i]))
-
-
-        return classifications
+        ## Replace all values 0 -> -1 , keep the rest
+        classified = np.where(classified == 0, -1, classified)
+        #print(classified)
+        dim, NUM = x.shape
+        classifications = np.zeros(NUM)
+        return classified[0]
 
     def printKernelClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
         '''
@@ -211,6 +214,14 @@ class SVM(object):
         :param y: Ground truth labels
         '''
         # TODO: Implement
+        classified = self.classifyKernel(x)
+
+        (_, N) = y.shape
+        y = np.ravel(y)
+        diff = y-classified
 
         result = 0
+        for i in range(N):
+            if int(diff[i]) != 0:
+                result += 1
         print("Total error: {:.2f}%".format(result))
