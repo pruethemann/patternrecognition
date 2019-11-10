@@ -39,7 +39,7 @@ def svmKernelToyExample() -> None:
 
     # TODO: Train svm
     svm = SVM()
-    svm.train(train_x, train_label, kernel = 'linear')
+    svm.train(train_x, train_label, kernel = 'poly')
 
     print("Training error")
     svm.printKernelClassificationError(train_x, train_label)

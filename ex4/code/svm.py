@@ -46,7 +46,7 @@ class SVM(object):
         # Implement the remainder of the svm training function
         self.kernelpar = kernelpar
 
-        NUM = x.shape[1]
+        dim, NUM = x.shape
 
         # we'll solve the dual, obtain the kernel
         if kernel == 'linear':
@@ -109,17 +109,16 @@ class SVM(object):
         # List of support vectors. Extract sv by taking only the colums with the indices of the lambdas
         self.sv = x[:, index]
         # List of labels for the support vectors (-1 or 1 for each support vector)
-        self.sv_labels = y[0, index]
+        self.sv_labels = np.ravel(y[:, index])
 
         sv_count = self.sv.shape[1]
-        print(f'Amount of sv: {sv_count}')
 
         if kernel is None:
             ### WEIGHT
-            self.w = 0
             # Calculate weight. Lecture 6, Slide 25
+            self.w = 0
             for i in range(sv_count):
-                self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]  # SVM weights used in the linear SVM
+                self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]
 
         else: # Kernel
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
@@ -127,29 +126,24 @@ class SVM(object):
             for i in range(sv_count):
                 self.w += self.lambdas[i] * self.sv_labels[i] * K[:, i]
 
+        ## Dimenstion testing
+
         ### BIAS
         # get mean of all sv axis=1 sums up only rows # Use the mean of all support vectors for stability when computing the bias (w_0)
+        sv_mean = np.mean(self.sv, axis=1)
+        w_mean = np.mean(self.w, axis=0)
 
-       # print(self.sv)
-        mean = np.mean(self.sv, axis=1)
 
-        print(self.sv_labels.shape)
-        print(np.ravel(self.w).shape)
-        print(mean.shape)
+        self.bias = 0
 
-        # Calculate weight. Lecture 6, Slide 25
-        self.bias = self.sv_labels[0] - np.dot(np.array(self.w), mean)
-
-       # self.bias = self.sv_labels - np.dot(self.w, mean)
-        #print(f'Bias {self.bias}')
-
+        for i in range(sv_count):
+            self.bias += self.lambdas[i] * self.sv_labels[i]  # SVM weights used in the linear SVM
         # check implementation with KKT2 check
         self.__check__()
 
     def __check__(self) -> None:
         # Checking implementation according to KKT2 (Linear_classifiers slide 46)
         kkt2_check = np.sum(np.dot(self.lambdas, self.sv_labels))
-        #kkt2_check = np.dot(self.lambdas, self.sv_labels)
         print(f'kkt {kkt2_check}')
         assert kkt2_check < self.__TOL, 'SVM check failed - KKT2 condition not satisfied'
 
@@ -196,17 +190,17 @@ class SVM(object):
         '''
 
         ## calculate according to Exercise sheet
-        f = self.bias + np.dot( np.dot(self.lambdas, self.sv_labels), self.k)
+        sv_count = self.sv.shape[1]
+        f= 0
+        for i in range(sv_count):
+            f = self.lambdas[i]* self.sv_labels[i] * self.k
+
+        f = self.bias + f
+
         classifications = []
         for i in range(g.shape[1]):
-            classifications.append(np.sign(g[0, i]))
-        print(classifications)
+            classifications.append(np.sign(f[0, i]))
 
-        # binary classifcation in 0 / 1
-        classifications = (f > 0).astype(int)
-
-        ## Replace all values 0 -> -1 , keep the rest
-        classified = np.where(classifications == 0, -1, classifications)
 
         return classifications
 
@@ -217,5 +211,6 @@ class SVM(object):
         :param y: Ground truth labels
         '''
         # TODO: Implement
+
         result = 0
         print("Total error: {:.2f}%".format(result))

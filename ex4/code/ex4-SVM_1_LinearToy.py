@@ -21,7 +21,7 @@ def svmLinearToyExample() -> None:
      - Print training and test error
      - Plot data and separator
     '''
-    C = 1000
+    C = None
 
     toy = scipy.io.loadmat(dataPath + 'toy.mat')
     toy_train = toy['toy_train']
