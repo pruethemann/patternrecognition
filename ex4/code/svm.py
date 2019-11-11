@@ -191,10 +191,13 @@ class SVM(object):
         (_, N) = y.shape
         diff = y-classified
 
-        result = 0
-        for i in range(N):
-            if diff[0][i] != 0:
-                result += 1
+        # result = 0
+        # for i in range(N):
+        #     if diff[0][i] != 0:
+        #         result += 1
+
+        misclassified = np.sum(np.abs(diff))
+        result = 100.0 / N * misclassified
         print("Total error: {:.2f}%".format(result))
 
     def classifyKernel(self, x: np.ndarray) -> np.ndarray:
@@ -233,8 +236,12 @@ class SVM(object):
         y = np.ravel(y)
         diff = y-classified
 
-        result = 0
-        for i in range(N):
-            if int(diff[i]) != 0:
-                result += 1
+        # result = 0
+        # for i in range(N):
+        #     if int(diff[i]) != 0:
+        #         result += 1
+
+        misclassified = np.sum(np.abs(diff))
+        result = 100.0 / N * misclassified
+
         print("Total error: {:.2f}%".format(result))
