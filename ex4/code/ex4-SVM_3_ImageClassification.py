@@ -101,10 +101,10 @@ def svm_image(train: np.ndarray, test: np.ndarray, is_cifar: bool) -> SVM:
     test_x = test[1:, :].astype(float)
 
     # TODO: Train svm
-    C = 10000
+    C = None
     svm = SVM(C)
     # # use a linear instead of a linear kernel to improve speed
-    linear = True
+    linear = False
 
     if linear:
         kernel = None

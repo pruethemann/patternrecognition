@@ -44,7 +44,7 @@ def svmKernelToyExample() -> None:
     ## possible kernels
     kernel = ['linear', 'poly', 'rbf', 'None']
 
-    svm.train(train_x, train_label, kernel[2], 0.4)
+    svm.train(train_x, train_label, kernel[2], 0.1)
 
     print("Training error")
     svm.printKernelClassificationError(train_x, train_label)
