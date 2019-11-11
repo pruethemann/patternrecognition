@@ -67,7 +67,7 @@ class SVM(object):
             K = self.__computeKernelMatrix__(x, self.__gaussianKernel__, kernelpar)
             self.kernel = self.__gaussianKernel__
 
-        else: # Toy example
+        else: # Toy example No kernel
             print('Fitting linear SVM')
             # Compute the kernel matrix for the linear SVM
             K = self.__computeKernelMatrix__(x, self.__linearKernel__, None)
@@ -77,15 +77,20 @@ class SVM(object):
             G = -np.eye(NUM)
             h = np.zeros((NUM))
 
-        ## Soft margin
+        ## Soft margin. L6 Slide 56
         else:
             print("Using Slack variables")
-            I = np.eye(NUM)
+            I = np.eye(NUM) ## identity
+            ## merge
             G = np.vstack((-I, I))
             h = np.hstack((np.zeros(NUM), np.ones(NUM) * self.C))
+            print(h)
+            h = np.ones(2*NUM) * self.C
+            h[0] = 0
+            print(h.shape)
 
         ## Calculate all matrices for cvx.solver
-        P = y * y.transpose() * K
+        P = y * y.transpose() * K ##inner product * Kernel
         A = cvx.matrix(y)
         q = -np.ones((NUM, 1))
         b = 0.0
@@ -111,40 +116,41 @@ class SVM(object):
         index = np.where(lambdas>self.__TOL)[0]
         # List of support vectors. Extract sv by taking only the colums with the indices of the lambdas
         self.sv = x[:, index]
+
         # List of labels for the support vectors (-1 or 1 for each support vector)
-        self.sv_labels = np.ravel(y[:, index])
+        self.sv_labels = y[:, index]
+
+        ## Flatten array to avoid dimension problems
+        self.sv_labels = np.ravel(self.sv_labels)
 
         sv_count = self.sv.shape[1]
         print(f'Amount of SV {sv_count}')
 
         if kernel is None:
-            ### WEIGHT
-            # Calculate weight. Lecture 6, Slide 25
+            # Calculate weight. Lecture 6, Slide 50
             self.w = 0
             for i in range(sv_count):
-                self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]
+                self.w += self.lambdas[i] * self.sv_labels[i] * self.sv[:, i]   # self.sv[:, i] is colum at position i
 
-            ### BIAS
+            ### BIAS. Found in ML book
             self.bias = 0
             for i in range(sv_count):
-                self.bias += self.lambdas[i] * self.sv_labels[i]  # SVM weights used in the linear SVM
+                self.bias += self.lambdas[i] * self.sv_labels[i]
 
         else: # Kernel
-          # In the kernel case, remember to compute the inner product with the chosen kernel function.
-            self.w = None
+            # In the kernel case, remember to compute the inner product with the chosen kernel function.
+            self.w = 0 ## L 8, S.34
+            for i in range(sv_count):
+                self.w += self.lambdas[i] * self.sv_labels[i] * K[index[i], index]
             # Use the mean of all support vectors for stability when computing the bias (w_0).
             # In the kernel case, remember to compute the inner product with the chosen kernel function.
             self.bias = 0
-            for i in range(self.sv.shape[1]):
-                self.bias += self.sv_labels[i]
+            for i in range(sv_count):
+                ## keep inner prodcut
                 self.bias -= np.sum(self.lambdas * self.sv_labels * K[index[i], index])
-            self.bias /= self.sv.shape[1]
 
-
-        ### BIAS
-        # get mean of all sv axis=1 sums up only rows # Use the mean of all support vectors for stability when computing the bias (w_0)
-      #  sv_mean = np.mean(self.sv, axis=1)
-#        w_mean = np.mean(self.w, axis=0)
+            ## add sum of all labels and normalize
+            self.bias  = (self.bias + np.sum(self.sv_labels) ) / sv_count
 
         # check implementation with KKT2 check
         self.__check__()
@@ -152,7 +158,7 @@ class SVM(object):
     def __check__(self) -> None:
         # Checking implementation according to KKT2 (Linear_classifiers slide 46)
         kkt2_check = np.sum(np.dot(self.lambdas, self.sv_labels))
-        print(f'kkt {kkt2_check}')
+        #print(f'kkt {kkt2_check}')
         assert kkt2_check < self.__TOL, 'SVM check failed - KKT2 condition not satisfied'
 
     def classifyLinear(self, x: np.ndarray) -> np.ndarray:
@@ -161,7 +167,8 @@ class SVM(object):
         :param x: Data to be classified
         :return: Array of classification values (-1.0 or 1.0)
         '''
-        # Classify data along hyperplane
+
+        ## classifier according to linear w.T * x + w0 >/< 0
         classified = np.dot(self.w.T, x) + self.bias
 
         # binary classifcation in 0 / 1
@@ -200,17 +207,17 @@ class SVM(object):
         #classified =  self.__computeKernelMatrix__(x, self.__linearKernel__, self.kernelpar)
 
         dim, NUM = x.shape
-        classifications = np.zeros(NUM)
+        classified = np.zeros(NUM)
 
-        for i in range(x.shape[1]):
-            functionOut = 0
+        for i in range(NUM):
+            threshold = 0
             for j in range(len(self.lambdas)):
-                functionOut += (self.lambdas[j] * self.sv_labels[j] * self.kernel(x[:, i], self.sv[:, j], self.kernelpar))
-            classifications[i] = np.sign(functionOut + self.bias)
-        return classifications
+                threshold += (self.lambdas[j] * self.sv_labels[j] * self.kernel(x[:, i], self.sv[:, j], self.kernelpar))
 
+            ## determine border for classification at border of threshold + bias
+            classified[i] = np.sign(threshold + self.bias)
 
-        return classified[0]
+        return classified
 
     def printKernelClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:
         '''
@@ -222,6 +229,7 @@ class SVM(object):
         classified = self.classifyKernel(x)
 
         (_, N) = y.shape
+        ## solve dimension problems
         y = np.ravel(y)
         diff = y-classified
 
