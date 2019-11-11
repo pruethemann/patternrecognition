@@ -80,8 +80,8 @@ class SVM(object):
         ## Soft margin
         else:
             print("Using Slack variables")
-            identity_matrix = np.eye(NUM)
-            G = np.vstack((-identity_matrix, identity_matrix))
+            I = np.eye(NUM)
+            G = np.vstack((-I, I))
             h = np.hstack((np.zeros(NUM), np.ones(NUM) * self.C))
 
         ## Calculate all matrices for cvx.solver
@@ -115,6 +115,7 @@ class SVM(object):
         self.sv_labels = np.ravel(y[:, index])
 
         sv_count = self.sv.shape[1]
+        print(f'Amount of SV {sv_count}')
 
         if kernel is None:
             ### WEIGHT
@@ -130,19 +131,20 @@ class SVM(object):
 
         else: # Kernel
           # In the kernel case, remember to compute the inner product with the chosen kernel function.
-            self.w = 0
-            for i in range(sv_count):
-                self.w += self.lambdas[i] * self.sv_labels[i] * K[:, i]
-
-            ### BIAS
+            self.w = None
+            # Use the mean of all support vectors for stability when computing the bias (w_0).
+            # In the kernel case, remember to compute the inner product with the chosen kernel function.
             self.bias = 0
-            for i in range(sv_count):
-                self.bias += self.lambdas[i] * self.sv_labels[i]  * K[:, i] # SVM weights used in the linear SVM
+            for i in range(self.sv.shape[1]):
+                self.bias += self.sv_labels[i]
+                self.bias -= np.sum(self.lambdas * self.sv_labels * K[index[i], index])
+            self.bias /= self.sv.shape[1]
+
 
         ### BIAS
         # get mean of all sv axis=1 sums up only rows # Use the mean of all support vectors for stability when computing the bias (w_0)
-        sv_mean = np.mean(self.sv, axis=1)
-        w_mean = np.mean(self.w, axis=0)
+      #  sv_mean = np.mean(self.sv, axis=1)
+#        w_mean = np.mean(self.w, axis=0)
 
         # check implementation with KKT2 check
         self.__check__()
@@ -195,16 +197,19 @@ class SVM(object):
         :return: Array (1D) of classification values (-1.0 or 1.0)
         '''
 
-        classified =  self.__computeKernelMatrix__(x, self.__linearKernel__, self.kernelpar)
+        #classified =  self.__computeKernelMatrix__(x, self.__linearKernel__, self.kernelpar)
 
-        # binary classifcation in 0 / 1
-        classified = (classified > 0).astype(int)
-
-        ## Replace all values 0 -> -1 , keep the rest
-        classified = np.where(classified == 0, -1, classified)
-        #print(classified)
         dim, NUM = x.shape
         classifications = np.zeros(NUM)
+
+        for i in range(x.shape[1]):
+            functionOut = 0
+            for j in range(len(self.lambdas)):
+                functionOut += (self.lambdas[j] * self.sv_labels[j] * self.kernel(x[:, i], self.sv[:, j], self.kernelpar))
+            classifications[i] = np.sign(functionOut + self.bias)
+        return classifications
+
+
         return classified[0]
 
     def printKernelClassificationError(self, x: np.ndarray, y: np.ndarray) -> None:

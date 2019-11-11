@@ -101,9 +101,11 @@ def svm_image(train: np.ndarray, test: np.ndarray, is_cifar: bool) -> SVM:
     test_x = test[1:, :].astype(float)
 
     # TODO: Train svm
-    svm = ???
+    svm = SVM()
     # # use a linear instead of a linear kernel to improve speed
     # linear = ??? # bool
+    svm.train(train_x, train_label, kernel = 'linear')
+
 
     print("Training error")
     # TODO: Compute training error of SVM

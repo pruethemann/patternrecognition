@@ -38,8 +38,9 @@ def svmKernelToyExample() -> None:
     plt.show()
 
     # TODO: Train svm
-    svm = SVM()
-    svm.train(train_x, train_label, kernel = 'rbf')
+    C = 1
+    svm = SVM(C)
+    svm.train(train_x, train_label, 'rbf',2)
 
     print("Training error")
     svm.printKernelClassificationError(train_x, train_label)
@@ -53,7 +54,6 @@ def svmKernelToyExample() -> None:
     datamax = math.ceil(max(np.max(train_x), np.max(np.max(test_x))))
 
     plot_kernel_separator(plt, svm, datamin, datamax)
-
     plot_data(plt, train_x, train_label, [['red', '+'], ['blue', '_']], 'Training')
     plot_data(plt, test_x, test_label, [['yellow', '+'], ['green', '_']], 'Test')
     plt.show()
