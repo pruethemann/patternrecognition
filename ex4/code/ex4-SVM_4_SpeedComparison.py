@@ -31,11 +31,6 @@ def svmSpeedComparison() -> None:
 
     toy_test_x = toy_test[1:3, :].astype(np.double)
 
-    start = time.time()
-    print("hello")
-    end = time.time()
-    print(end - start)
-
     # TODO: Compute the average classification time of both the linear and the kernel SVM (with a linear kernel)
     # Linear SVM
     svmLinear = SVM(None)
