@@ -84,7 +84,7 @@ def svm_image(train: np.ndarray, test: np.ndarray, is_cifar: bool) -> SVM:
     :return: Trained SVM object
     '''
 
-    linear = True
+
 
     _, N = np.shape(train)
     if is_cifar:
@@ -101,22 +101,40 @@ def svm_image(train: np.ndarray, test: np.ndarray, is_cifar: bool) -> SVM:
     test_x = test[1:, :].astype(float)
 
     # TODO: Train svm
-    svm = SVM()
+    C = 10000
+    svm = SVM(C)
     # # use a linear instead of a linear kernel to improve speed
-    # linear = ??? # bool
-    svm.train(train_x, train_label, kernel = 'linear')
-
-
-    print("Training error")
-    # TODO: Compute training error of SVM
-
-    print("Test error")
-    # TODO: Compute test error of SVM
+    linear = True
 
     if linear:
+        kernel = None
+
+    else:
+        kernel = ['linear', 'poly', 'rbf']
+
+
+    if linear:
+        print("Training error")
+        # TODO: Compute training error of SVM
+        svm.train(train_x, train_label, kernel)
+        svm.printLinearClassificationError(train_x, train_label)
+
+        print("Test error")
+        # TODO: Compute test error of SVM
+        svm.printLinearClassificationError(test_x, test_label)
         visualizeClassification(train_x, train_label, svm.classifyLinear(train_x), 3 * 3, is_cifar, 'training')
         visualizeClassification(test_x, test_label, svm.classifyLinear(test_x), 3 * 3, is_cifar, 'test')
+
     else:
+        svm.train(train_x, train_label, kernel[1], 0.1)
+        print("Training error")
+        # TODO: Compute training error of SVM
+        svm.printKernelClassificationError(train_x, train_label)
+
+        print("Test error")
+        # TODO: Compute test error of SVM
+        svm.printKernelClassificationError(test_x, test_label)
+
         visualizeClassification(train_x, train_label, svm.classifyKernel(train_x), 3 * 3, is_cifar, 'training')
         visualizeClassification(test_x, test_label, svm.classifyKernel(test_x), 3 * 3, is_cifar, 'test')
     return svm
