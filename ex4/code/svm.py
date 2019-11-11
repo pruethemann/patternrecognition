@@ -81,18 +81,15 @@ class SVM(object):
         else:
             print("Using Slack variables")
             I = np.eye(NUM) ## identity
-            ## merge
+            ## merge two idenitiy matrices
             G = np.vstack((-I, I))
+            ## Get a matrix with the two limits 0 and C
             h = np.hstack((np.zeros(NUM), np.ones(NUM) * self.C))
-            print(h)
-            h = np.ones(2*NUM) * self.C
-            h[0] = 0
-            print(h.shape)
 
         ## Calculate all matrices for cvx.solver
         P = y * y.transpose() * K ##inner product * Kernel
         A = cvx.matrix(y)
-        q = -np.ones((NUM, 1))
+        q = -np.ones(NUM)
         b = 0.0
 
         ## transform to matrix
