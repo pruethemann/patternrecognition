@@ -13,10 +13,10 @@ def toyNetwork() -> None:
     w = [ torch.tensor([w], requires_grad=True)  for w in weights ]
     print(w)
 
-    b = [torch.tensor([1.0]) , torch.tensor([1.0]) ]
+    b = torch.tensor([1.0, 1.0])
 
     ### Define data: x, y using torch.tensor
-    x = [torch.tensor([1.0]), torch.tensor([1.0])]
+    x = torch.tensor([1.0, 1.0])
     y_true = torch.tensor([1.0])
 
     # TODO: Define learning rate
@@ -33,12 +33,13 @@ def toyNetwork() -> None:
     loss_before = 10
     loss = 1
     learning_rate = 0.2
-    while abs(loss_before - loss) > 0.001:
+    #while abs(loss_before - loss) > 0.0001:
+    for i in range(5):
         loss_before = loss
 
-        h1 = torch.sigmoid( x[0] * w[0] + x[1] * w[2] + b[0] * w[4]  )
-        h2 = torch.sigmoid( x[0] * w[1] + x[1] * w[3] + b[0] * w[5] )
-        y = torch.sigmoid( h1 *w[6] + h2 * w[7] + b[1] * w[8]  )
+        h1 = torch.sigmoid( x[0] * w[0] + x[1] * w[2] +  w[4]  )
+        h2 = torch.sigmoid( x[0] * w[1] + x[1] * w[3] +  w[5] )
+        y =  h1 *w[6] + h2 * w[7] +  w[8]
 
         loss = 0.5 *(y_true - y)**2
 
@@ -50,8 +51,8 @@ def toyNetwork() -> None:
         with torch.no_grad():
             for i in range(len(w)):
                 w[i] -= learning_rate * w[i].grad
-                w[i].grad.zero_()
                 print(f'New w{i+1}: {w[i].item()}')
+                w[i].grad.zero_()
 
         print("################### NEXT ROUND ###################")
 
