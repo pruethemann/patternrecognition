@@ -17,11 +17,11 @@ def parabolaData() -> None:
 
 
     # TODO: Define model, optimizer and loss
-    batch_size = ???          # Define training batch size
-    model = mySimpleNN(???)   # Initialize the 'mySimpleNN' instance
-    optimizer = ???           # Define optimizer to use from torch.optim.xxx
-    criterion = ???           # Define model cost function torch.nn.xxx
-    epocs = ???               # Total number of epocs to execute
+    batch_size = 20          # Define training batch size
+    model = mySimpleNN(batch_size, 2)   # Initialize the 'mySimpleNN' instance
+    optimizer = torch.optim.adam           # Define optimizer to use from torch.optim.xxx
+    criterion = torch.nn.BCELoss           # Define model cost function torch.nn.xxx
+    epocs = 50               # Total number of epocs to execute
 
     trainer = Trainer(model, optimizer, criterion)
     trainer.trainModel(X_train, y_train, X_test, y_test,
