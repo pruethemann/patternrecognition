@@ -9,6 +9,7 @@ class mySimpleNN(torch.nn.Module):
     def __init__(self, input_shape: tuple):
         super(mySimpleNN, self).__init__()
         # TODO: Define a simple neural network
+        # TODO: Change variable names, these don't make any sense
         dimIn, dimOut = input_shape
         dimHidden = 200
         self.layer_1 = torch.nn.Linear(dimOut, dimHidden)
