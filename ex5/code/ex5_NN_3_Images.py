@@ -40,8 +40,8 @@ def LoadDataSet() -> (int, DataLoader, int, DataLoader):
 
     # Load Data from folders
     data = {
-        'train': datasets.ImageFolder(root=train_directory),
-        'valid': datasets.ImageFolder(root=valid_directory)
+        'train': datasets.ImageFolder(root=train_directory, transform=transforms.ToTensor()),
+        'valid': datasets.ImageFolder(root=valid_directory, transform=transforms.ToTensor())
     }
 
     # Size of Data, to be used for calculating Average Loss and Accuracy
@@ -96,8 +96,8 @@ def train_and_validate(myModel, criterion, optimizer, epochs=25):
         valid_acc = 0.0
 
         for i, (inputs, labels) in enumerate(train_data_loader):
-            inputs = inputs.to(myModel)
-            labels = labels.to(myModel)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
             # Clean existing gradients
             optimizer.zero_grad()
@@ -185,31 +185,31 @@ def train_and_validate(myModel, criterion, optimizer, epochs=25):
 
 
 if __name__ == '__main__':
-    # # TODO: train and test a logistic regression classifier implemented as a neural network
-    print('##########################')
-    print('Testing Logistic Regression')
-    logRegModel = MyLogRegNN()
-
-    criterion = None  # Cost function - torch.nn.XXX loss functions
-    optimizer = None  # Optimizer algorithm - torch.optim.XXX function
-    finallogRegmodel, logRegHistory = train_and_validate(logRegModel, criterion, optimizer, epochs=20)
-    writeHistoryPlots(logRegHistory, 'logRegModel', 'output/')
+    # TODO: train and test a logistic regression classifier implemented as a neural network
+    # print('##########################')
+    # print('Testing Logistic Regression')
+    # logRegModel = MyLogRegNN()
+    #
+    # criterion = torch.nn.CrossEntropyLoss()  # Cost function - torch.nn.XXX loss functions
+    # optimizer = torch.optim.SGD(logRegModel.parameters(), lr=1e-3)  # Optimizer algorithm - torch.optim.XXX function
+    # finallogRegmodel, logRegHistory = train_and_validate(logRegModel, criterion, optimizer, epochs=20)
+    # writeHistoryPlots(logRegHistory, 'logRegModel', 'output/')
 
     # TODO: train and test the fully connected DNN
     print('##########################')
     print('Testing Deep Neural Net')
     dnnModel = MyFullyConnectedNN()
-    criterion = None  # Cost function - torch.nn.XXX loss functions
-    optimizer = None  # Optimizer algorithm - torch.optim.XXX function
+    criterion = torch.nn.CrossEntropyLoss()  # Cost function - torch.nn.XXX loss functions
+    optimizer = torch.optim.Adam(dnnModel.parameters(), lr=1e-4)  # Optimizer algorithm - torch.optim.XXX function
     finalDNNmodel, dnnHistory = train_and_validate(dnnModel, criterion, optimizer, epochs=20)
     writeHistoryPlots(dnnHistory, 'dnnModel', 'output/')
 
     # TODO: train and test a CNN
-    print('##########################')
-    print('Testing Convolutional Neural Net')
-    cnnModel = MyCNN()
-    criterion = None  # Cost function - torch.nn.XXX loss functions
-    optimizer = None  # Optimizer algorithm - torch.optim.XXX function
-
-    finalCNNmodel, cnnHistory = train_and_validate(cnnModel, criterion, optimizer, epochs=20)
-    writeHistoryPlots(cnnHistory, 'cnnModel', 'output/')
+    # print('##########################')
+    # print('Testing Convolutional Neural Net')
+    # cnnModel = MyCNN()
+    # criterion = None  # Cost function - torch.nn.XXX loss functions
+    # optimizer = None  # Optimizer algorithm - torch.optim.XXX function
+    #
+    # finalCNNmodel, cnnHistory = train_and_validate(cnnModel, criterion, optimizer, epochs=20)
+    # writeHistoryPlots(cnnHistory, 'cnnModel', 'output/')
