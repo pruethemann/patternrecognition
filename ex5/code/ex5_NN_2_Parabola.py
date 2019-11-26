@@ -17,11 +17,17 @@ def parabolaData() -> None:
 
 
     # TODO: Define model, optimizer and loss
-    batch_size = 20          # Define training batch size
-    model = mySimpleNN(batch_size, 2)   # Initialize the 'mySimpleNN' instance
-    optimizer = torch.optim.adam           # Define optimizer to use from torch.optim.xxx
-    criterion = torch.nn.BCELoss           # Define model cost function torch.nn.xxx
-    epocs = 50               # Total number of epocs to execute
+    # Define training batch size
+    batch_size = 50
+    # Initialize the 'mySimpleNN' instance
+    model = mySimpleNN((batch_size, 2))
+    # Define optimizer to use from torch.optim.xxx
+    # optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    # Define model cost function torch.nn.xxx
+    criterion = torch.nn.MSELoss(reduction='sum')
+    # Total number of epocs to execute
+    epocs = 500
 
     trainer = Trainer(model, optimizer, criterion)
     trainer.trainModel(X_train, y_train, X_test, y_test,
@@ -44,11 +50,17 @@ def flowerData() -> None:
 
 
     # TODO: Define model, optimizer and loss
-    batch_size = ???          # Define training batch size
-    model = mySimpleNN(???)   # Initialize the 'mySimpleNN' instance
-    optimizer = ???           # Define optimizer to user from torch.optim.xxx
-    criterion = ???           # Define model cost function torch.nn.xxx
-    epocs = ???               # Total number of epocs to execute
+    # Define training batch size
+    batch_size = 30
+    # Initialize the 'mySimpleNN' instance
+    model = mySimpleNN((batch_size, 2))
+    # Define optimizer to use from torch.optim.xxx
+    # optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    # Define model cost function torch.nn.xxx
+    criterion = torch.nn.MSELoss(reduction='sum')
+    # Total number of epocs to execute
+    epocs = 500
 
     trainer = Trainer(model, optimizer, criterion)
     trainer.trainModel(X_train, y_train, X_test, y_test,
@@ -64,5 +76,5 @@ if __name__ == "__main__":
     print("##########-##########-##########")
     print("##########-##########-##########")
     print("Neural network flower example!")
-    flowerData()
+    # flowerData()
     print("##########-##########-##########")
