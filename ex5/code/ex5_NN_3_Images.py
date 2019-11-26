@@ -196,20 +196,20 @@ if __name__ == '__main__':
     # writeHistoryPlots(logRegHistory, 'logRegModel', 'output/')
 
     # TODO: train and test the fully connected DNN
-    print('##########################')
-    print('Testing Deep Neural Net')
-    dnnModel = MyFullyConnectedNN()
-    criterion = torch.nn.CrossEntropyLoss()  # Cost function - torch.nn.XXX loss functions
-    optimizer = torch.optim.Adam(dnnModel.parameters(), lr=1e-4)  # Optimizer algorithm - torch.optim.XXX function
-    finalDNNmodel, dnnHistory = train_and_validate(dnnModel, criterion, optimizer, epochs=20)
-    writeHistoryPlots(dnnHistory, 'dnnModel', 'output/')
+    # print('##########################')
+    # print('Testing Deep Neural Net')
+    # dnnModel = MyFullyConnectedNN()
+    # criterion = torch.nn.CrossEntropyLoss()  # Cost function - torch.nn.XXX loss functions
+    # optimizer = torch.optim.Adam(dnnModel.parameters(), lr=1e-4)  # Optimizer algorithm - torch.optim.XXX function
+    # finalDNNmodel, dnnHistory = train_and_validate(dnnModel, criterion, optimizer, epochs=20)
+    # writeHistoryPlots(dnnHistory, 'dnnModel', 'output/')
 
     # TODO: train and test a CNN
-    # print('##########################')
-    # print('Testing Convolutional Neural Net')
-    # cnnModel = MyCNN()
-    # criterion = None  # Cost function - torch.nn.XXX loss functions
-    # optimizer = None  # Optimizer algorithm - torch.optim.XXX function
-    #
-    # finalCNNmodel, cnnHistory = train_and_validate(cnnModel, criterion, optimizer, epochs=20)
-    # writeHistoryPlots(cnnHistory, 'cnnModel', 'output/')
+    print('##########################')
+    print('Testing Convolutional Neural Net')
+    cnnModel = MyCNN()
+    criterion = torch.nn.CrossEntropyLoss()  # Cost function - torch.nn.XXX loss functions
+    optimizer = torch.optim.Adam(cnnModel.parameters(), lr=1e-4)  # Optimizer algorithm - torch.optim.XXX function
+
+    finalCNNmodel, cnnHistory = train_and_validate(cnnModel, criterion, optimizer, epochs=20)
+    writeHistoryPlots(cnnHistory, 'cnnModel', 'output/')
