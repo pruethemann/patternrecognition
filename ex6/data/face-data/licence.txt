@@ -1,0 +1,15 @@
+Licence
+-------
+
+concerning: 
+Face data provided with exercise 5 of the pattern recognition
+course at the University of Basel, 2014
+
+All rights reserved.
+
+Univerity of Basel 2014
+Department of Mathematics and Computer Science
+
+If you are interested in using the face data besides the course, please refer to
+http://faces.cs.unibas.ch/ to obtain the proper licence.
+
