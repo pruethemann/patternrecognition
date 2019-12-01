@@ -43,9 +43,11 @@ class PCA():
 
         ## 1. zero center data along dimension. Here features are in rows
         self.mu = mu = np.mean(X, axis=1)
+        X = (X.T - mu.T).T
 
         ## 2. Determine covariance matrix
         covariance = np.cov(X, rowvar=True) ## features in rows
+        print(f'Covariance {covariance}')
 
         ## 3. Determine eigenvalues and eigenvectors of covariance matrix
         eigenv, eigenvectors = np.linalg.eig(covariance)
@@ -55,43 +57,59 @@ class PCA():
 
         ## 5. Sort eigenvalues and eigenvectors with index
         C, U = eigenv[idx], eigenvectors[:, idx]
-        self.C, self.U = C, U
-        return mu, U, C
 
+        ## 6. Limit principal components
+        if self._maxComponents > -1:
+            C = C[:self._maxComponents]
+            U = U[:, 0:self._maxComponents]
+
+        self.C, self.U = C, U
+        print(f'eigenvectors \n {U}')
+        print(f'eigenvalues \n {C}')
+
+        return U, C
+
+    ## Calculate everything over mean
     def train(self, X: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         '''
         Compute PCA "manually" by using SVD
-        Refer to the LinearTransform slides for details
+        Refer to the LinearTransform slides for details. Nobody understands this mess.
         NOTE: Remember to set svd(, full_matrices=False)!!!
         :param X: Training data
         '''
 
-        X = X.T
-        self.mu = mu = np.mean(X, axis=0)
-        n, p = X.shape
-        # Let us assume that it is centered
-        X -= mu
+        nrows, ncols = X.shape
+        ## 1. zero center data along dimension. Here features are in rows
+        self.mu = mu = np.mean(X, axis=1)
+        X = (X.T - mu.T).T
 
-        # we now perform singular value decomposition of X
-        U, S, Vt = np.linalg.svd(X, full_matrices=False)
-        S = np.diag(S)
+        ## 2. Calculate covariance matrix
+        covariance = np.dot(X, X.T) / (ncols - 1)
+
+        ## 3. Perform singular value decomposition of covariance matrix
+        # S: eigenvalues (Diagnonal matrix with eigenvalues)
+        # U: matrix with eigenvectors
+        _, eigenvalues, eigenvectorsT = np.linalg.svd(covariance, full_matrices=False)
+
+        ## 4. sort eigenvalues in descending order
+        idx = eigenvalues.argsort()[::-1]
+
+        ## 5. Sort eigenvalues and eigenvectors with index
+        C, U = eigenvalues[idx], eigenvectorsT[:, idx]
+
+        ## 6. Limit principal components
+        if self._maxComponents > -1:
+            U = U.T[:, 0:self._maxComponents]
+            C = C[:self._maxComponents]
+
+        print(f'eigenvectors {U}')
+        print(f'eigenvalues {C}')
+
         self.U = U
-        self.C = S
+        self.C = C
 
-        # a matrix of eigenvectors (each column is an eigenvector)
-      #  print("Vectors = \n", U)
-        print("lambda = \n", S)
+        #print(f'C SVD {np.sqrt(S)/(m-1)}')
 
-        V = Vt.T
-        Sigma = np.diag(S)
-        if self._maxComponents == -1:
-            self.C = C = Sigma
-        else:
-            self.C = C = Sigma[:self._maxComponents]
-
-
-#        C = principal_components[:, 0:self._maxComponents]
-#        US_k = U[:, 0:self._maxComponents].dot(S[0:self._maxComponents, 0:self._maxComponents])
         return mu, U, C
 
 
@@ -100,12 +118,9 @@ class PCA():
         :param X: Data to be projected into PCA space. Variables are in row
         :return: alpha - feature vector
         '''
-        ## 6. Limit principal components
-        if self._maxComponents > -1:
-            U = self.U[:, 0:self._maxComponents]
 
         ## Eigenvectors in rows dot data in variables in rows
-        alpha = U.T @ X
+        alpha = self.U.T @ X
         return alpha
 
     def from_pca(self, alpha: np.ndarray) -> np.ndarray:
@@ -113,20 +128,13 @@ class PCA():
         :param alpha: feature vector
         :return: X in the original space
         '''
-        ## 6. Limit principal components
-        if self._maxComponents > -1:
-            U = self.U[:, 0:self._maxComponents]
-        ## Perform back transformation: Restored Data = limited eigenvectors (transposed) x PCA transposed (dimension in rows=
+
+        ## 7. Perform back transformation: Restored Data = limited eigenvectors (transposed) x PCA transposed (dimension in rows=
         ## eigenvectors are actually inversed but it's a orthogonal matrix
-        Xout = U @ alpha
+        Xout = self.U @ alpha
 
-        ## Readd mean
-        dims, ncols = Xout.shape
-
-        ### ToDo: optimize
-        for dim in range(dims):
-            for col in range(ncols):
-                Xout[dim][col] += self.mu[dim]
+        ## 8. Readd mean
+        Xout = (Xout.T + self.mu.T).T
 
         return Xout
 
@@ -139,13 +147,13 @@ class PCA():
 
         self._maxComponents = k
 
-        ## 1. Calculate PCA manuelly. SVD is following
+        ## 2. Calculate PCA manuelly. SVD is following
         self.pca_manuel(X)
 
-        ## 2. Transform RAW data using first n principal components
+        ## 3. Transform RAW data using first n principal components
         alpha = self.to_pca(X)
 
-        ## 3. Backtransform alpha to Raw data
+        ## 4. Backtransform alpha to Raw data
         x_projected = self.from_pca(alpha)
 
         return x_projected
