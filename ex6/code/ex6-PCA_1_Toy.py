@@ -37,21 +37,21 @@ def toyExample() -> None:
     #data = data[ : , :1]
 
     ## Iris dataset. Just for testing purposes
-    iris = datasets.load_iris()
-    data = iris['data'].astype(np.float32)  # a 150x4 matrix with features
-    data = data.T
+    #iris = datasets.load_iris()
+    #data = iris['data'].astype(np.float32)  # a 150x4 matrix with features
+    #data = data.T
     # TODO: Train PCA
-    nComponents = 1
+    nComponents = 2
 
     pca = PCA(nComponents)
 
     ## 1.1 Calculate PCA manuelly. SVD is following
     #pca.pca_manuel(data)
     ## 1.2 Calculate PCA via SVD
-    mu, U, C = pca.train(data)
+    mu, U, C, dataCenter = pca.train(data)
 
     ## 2. Transform RAW data using first n principal components
-    alpha = pca.to_pca(data)
+    alpha = pca.to_pca(dataCenter)
 
     ## 3. Backtransform alpha to Raw data
     Xout = pca.from_pca(alpha)
@@ -67,7 +67,7 @@ def toyExample() -> None:
     print(f'Mean Eigenvalues: {np.mean(C)}')
 
     ## Plot only if fewer than 2 components
-    if nComponents <= -10:
+    if nComponents == 2:
         plt.figure()
         plt.title('PCA plot')
         plt.subplot(1, 2, 1)  # Visualize given data and principal components
@@ -75,7 +75,7 @@ def toyExample() -> None:
         pca.plot_pca(data)
         plt.subplot(1, 2, 2)
         # TODO 1.3: Plot data projected into 1 dimension
-        pca.plot_pca(pca.project(data, nComponents))
+        pca.plot_pca(Xout)
         plt.show()
 
 

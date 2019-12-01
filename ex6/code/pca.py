@@ -85,6 +85,7 @@ class PCA():
 
         ## 2. Calculate covariance matrix
         covariance = np.dot(X, X.T) / (ncols - 1)
+        #covariance = np.cov(X, rowvar=True)  ## features in rows
 
         ## 3. Perform singular value decomposition of covariance matrix
         # S: eigenvalues (Diagnonal matrix with eigenvalues)
@@ -110,7 +111,7 @@ class PCA():
 
         #print(f'C SVD {np.sqrt(S)/(m-1)}')
 
-        return mu, U, C
+        return mu, U, C, X
 
 
     def to_pca(self, X: np.ndarray) -> np.ndarray:
