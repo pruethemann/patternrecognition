@@ -13,18 +13,35 @@ def toyExample() -> None:
     data = mat['toy_data']
 
     # TODO: Train PCA
-    pca = ???
+    nComponents = 1
+    pca = PCA(nComponents)
+
+    ## 1. Calculate PCA manuelly. SVD is following
+    pca.pca_manuel(data)
+
+    ## 2. Transform RAW data using first n principal components
+    alpha = pca.to_pca(data)
+    print(f'alpha: {alpha.shape}')
+
+    ## 3. Backtransform alpha to Raw data
+    Xout = pca.from_pca(alpha)
 
     print("Variance")
     # TODO 1.2: Compute data variance to the S vector computed by the PCA
+    print(f'Total Variance: {np.var(data)}')
+#    print(f'Total Variance: {pca.C}')
     # TODO 1.3: Compute data variance for the projected data (into 1D) to the S vector computed by the PCA
+#    print(f'Total Variance Transform: {np.var(alpha)}')
+   # print(f'Total Variance: {pca.C}')
 
     plt.figure()
     plt.title('PCA plot')
     plt.subplot(1, 2, 1)  # Visualize given data and principal components
     # TODO 1.1: Plot original data (hint, use the plot_pca function
+    pca.plot_pca(data)
     plt.subplot(1, 2, 2)
     # TODO 1.3: Plot data projected into 1 dimension
+    pca.plot_pca(pca.project(data,1))
     plt.show()
 
 
