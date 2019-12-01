@@ -43,12 +43,6 @@ class PCA():
 
         ## 1. zero center data along dimension. Here features are in rows
         self.mu = mu = np.mean(X, axis=1)
-        dims, ncols = X.shape
-
-        ### ToDo: optimize
-        for dim in range(dims):
-            for col in range(ncols):
-                X[dim][col] -= mu[dim]
 
         ## 2. Determine covariance matrix
         covariance = np.cov(X, rowvar=True) ## features in rows
@@ -125,6 +119,15 @@ class PCA():
         ## Perform back transformation: Restored Data = limited eigenvectors (transposed) x PCA transposed (dimension in rows=
         ## eigenvectors are actually inversed but it's a orthogonal matrix
         Xout = U @ alpha
+
+        ## Readd mean
+        dims, ncols = Xout.shape
+
+        ### ToDo: optimize
+        for dim in range(dims):
+            for col in range(ncols):
+                Xout[dim][col] += self.mu[dim]
+
         return Xout
 
     def project(self, X: np.ndarray, k: int) -> np.ndarray:
