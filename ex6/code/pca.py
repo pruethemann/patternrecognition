@@ -83,10 +83,12 @@ class PCA():
         self.mu = mu = np.mean(X, axis=1)
         X = (X.T - mu.T).T
 
+        print(X)
         ## 2. Calculate covariance matrix
         covariance = np.dot(X, X.T) / (ncols - 1)
-        #covariance = np.cov(X, rowvar=True)  ## features in rows
-
+        print(covariance)
+        covariance = np.cov(X, rowvar=True)  ## features in rows
+        print(covariance)
         ## 3. Perform singular value decomposition of covariance matrix
         # S: eigenvalues (Diagnonal matrix with eigenvalues)
         # U: matrix with eigenvectors

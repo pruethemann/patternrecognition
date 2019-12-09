@@ -27,21 +27,22 @@ def importGallery() -> np.array:
     gallery = gallery.T[ : , 1:]
     return gallery
 
-
 def toyExample() -> None:
     ## Toy Data Set
     mat = scipy.io.loadmat('../data/toy_data.mat')
     data = mat['toy_data']
 
-    #data = importGallery()
-    #data = data[ : , :1]
+    data = importGallery()
+    ## limit datafor testing purposes
+    data = data[ : , :144].T
+    print(data.shape)
 
     ## Iris dataset. Just for testing purposes
     #iris = datasets.load_iris()
     #data = iris['data'].astype(np.float32)  # a 150x4 matrix with features
     #data = data.T
     # TODO: Train PCA
-    nComponents = 2
+    nComponents = 25
 
     pca = PCA(nComponents)
 
@@ -76,6 +77,12 @@ def toyExample() -> None:
         plt.subplot(1, 2, 2)
         # TODO 1.3: Plot data projected into 1 dimension
         pca.plot_pca(Xout)
+        plt.show()
+
+        ## Plot variances
+    else:
+        x = np.arange(1,len(C)+1)
+        plt.bar(x, C)
         plt.show()
 
 
