@@ -83,27 +83,30 @@ class naiveBayes():
 
         ## prior: priorSpam / priorHam
         self.logPrior = math.log(priorSpam / (1.0 - priorSpam))
-        self.logSpamPrior = math.log(priorSpam)
-        self.logHamPrior = np.log(1 - priorSpam)
+        #self.logSpamPrior = math.log(priorSpam)
+        #self.logHamPrior = np.log(1 - priorSpam)
+
 
         words_list = [word_counter[w] for w in word_counter]
 
         words_list.sort(key=lambda x: x.p, reverse=True)
         self.dictionary = words_list
 
-    def SpamScore(self, word, number_of_features):
+    def getSpamScore(self, word, number_of_features):
 
+        ## check first num of indicative spam words
         for i in range(number_of_features):
             if self.dictionary[i].word == word:
-               # print(word)
+                ## return ratio of Spam/Ham REMEMBER: normalisation term (numSpam + numHam) cancels
                 return (self.dictionary[i].numOfSpamWords) / (self.dictionary[i].numOfHamWords)
 
+        ## check first num of indicative ham words
         for i in range(len(self.dictionary) - number_of_features - 1, len(self.dictionary)):
             if self.dictionary[i].word == word:
-               # print(word)
                 return (self.dictionary[i].numOfSpamWords) / (self.dictionary[i].numOfHamWords)
-        return 1
 
+        ## if word is not in dicionary. Return 1 -> log(1) = 0 Laplace smoothing
+        return 1
 
     def classify(self, message: str, number_of_features: int) -> bool:
         '''
@@ -114,19 +117,15 @@ class naiveBayes():
         ## Import all words of specific email
         words = np.array(self._extractWords(message))
 
-        # TODO: Implement classification function
-        spam_score = self.logSpamPrior
-        ham_score = self.logHamPrior
-        score = self.logPrior
+        # Implement classification function: Naive Bayes S. 12
+        score = self.logPrior ## log( prior(Spam) / prior(Ham))
 
         for w in words:
-            wordScore = self.SpamScore(w, number_of_features)
-
-            spam_score += np.log(1/(self.spam_count+1))
-            ham_score += np.log(1/(self.ham_count))
+            ## The higher the score, the more likely it's spam
+            wordScore = self.getSpamScore(w, number_of_features)
             score += np.log(wordScore)
 
-        #return spam_score > ham_score
+        ## if larger 0. Spam wins
         return score > 0
 
 
@@ -148,66 +147,42 @@ class naiveBayes():
             with open(f, 'r') as myfile:
               emailContent = myfile.read()
               
-             ## check if email is spamm
-            spam = self.classify(emailContent, number_of_features)
-            if spam and 'spmsga' in f or not spam and 'spmsga' not in f:
-                corr += 1 
-                            
+             ## check if email is spam
+            is_spam = self.classify(emailContent, number_of_features)
+            if is_spam and 'spmsga' in f or not is_spam and 'spmsga' not in f:
+                corr += 1
             else:
                 ncorr +=1
         return corr / (corr + ncorr)
     
 
     def printMostPopularSpamWords(self, num: int) -> None:
-        print("{} most popular SPAM words:".format(num))
-        # print the 'num' most used SPAM words from the dictionary       
+        print("\n{} most popular SPAM words:".format(num))
+        # print the 'num' most used SPAM words from the dictionary
+        ## sort for largest number of Spam
         self.dictionary.sort(key=lambda x: x.numOfSpamWords, reverse=True)
-        
-        c = 0
-        for spam in self.dictionary:
-            if c > num:
-                break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , round(spam.p,2))
-            c +=1
+        self.printWords(num)
 
     def printMostPopularHamWords(self, num: int) -> None:
-        print("{} most popular HAM words:".format(num))
+        print("\n{} most popular HAM words:".format(num))
         # print the 'num' most used HAM words from the dictionary
         self.dictionary.sort(key=lambda x: x.numOfHamWords, reverse=True)
-        
-        c = 0
-        for ham in self.dictionary:
-            if c > num:
-                break
-            print(ham.word, "   ", ham.numOfHamWords, "   ", ham.numOfSpamWords, "   " , round(ham.p,2))
-            c +=1        
-        
+        self.printWords(num)
 
     def printMostindicativeSpamWords(self, num: int) -> None:
-        print("{} most distinct SPAM words:".format(num))
+        print("\n{} most distinct SPAM words:".format(num))
         # TODO: print the 'num' most indicative SPAM words from the dictionary
         self.dictionary.sort(key=lambda x: x.p, reverse=True)
-        
-        c = 0
-        for spam in self.dictionary:
-            if c > num:
-                break
-            print(spam.word, "   ", spam.numOfHamWords, "   ", spam.numOfSpamWords, "   " , round(spam.p,2))
-            c +=1
-
-        for w in self.dictionary:
-            if w.word == 'addresses':
-                print(w.word, w.numOfHamWords, w.numOfSpamWords, w.p)
+        self.printWords(num)
         
 
     def printMostindicativeHamWords(self, num: int) -> None:
-        print("{} most distinct HAM words:".format(num))
+        print("\n{} most distinct HAM words:".format(num))
         # TODO: print the 'num' most indicative HAM words from the dictionary
         self.dictionary.sort(key=lambda x: x.p, reverse=False)
-        
-        c = 0
-        for ham in self.dictionary:
-            if c > num:
-                break
-            print(ham.word, "   ", ham.numOfHamWords, "   ", ham.numOfSpamWords, "   " , round(ham.p,2))
-            c +=1   
+        self.printWords(num)
+
+    def printWords(self, num:int) -> None:
+        for i in range(num):
+            w = self.dictionary[i]
+            print(f'{w.word} Ham: {w.numOfHamWords} Spam: {w.numOfSpamWords} Ind: {round(w.p,2)}')
