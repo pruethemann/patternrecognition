@@ -132,7 +132,7 @@ class SVM(object):
             ### BIAS. Found in ML book
             self.bias = 0
             for i in range(sv_count):
-                self.bias += self.lambdas[i] * self.sv_labels[i]
+                self.bias += np.dot(self.lambdas[i] , self.sv_labels[i])
 
         else: # Kernel
             # In the kernel case, remember to compute the inner product with the chosen kernel function.
@@ -188,11 +188,6 @@ class SVM(object):
         (_, N) = y.shape
         diff = y-classified
 
-        # result = 0
-        # for i in range(N):
-        #     if diff[0][i] != 0:
-        #         result += 1
-
         misclassified = np.sum(np.abs(diff))
         result = 100.0 / N * misclassified
         print("Total error: {:.2f}%".format(result))
@@ -203,8 +198,6 @@ class SVM(object):
         :param x: Data to be classified
         :return: Array (1D) of classification values (-1.0 or 1.0)
         '''
-
-        #classified =  self.__computeKernelMatrix__(x, self.__linearKernel__, self.kernelpar)
 
         dim, NUM = x.shape
         classified = np.zeros(NUM)

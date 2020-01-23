@@ -37,8 +37,8 @@ def toyNetwork() -> None:
     for i in range(5):
         loss_before = loss
 
-        h1 = torch.sigmoid( x[0] * w[0] + x[1] * w[2] +  w[4]  )
-        h2 = torch.sigmoid( x[0] * w[1] + x[1] * w[3] +  w[5] )
+        h1 = torch.sigmoid(x[0]*w[0] + x[1]*w[2] +  w[4])
+        h2 = torch.sigmoid(x[0] * w[1] + x[1] * w[3] +  w[5])
         y =  h1 *w[6] + h2 * w[7] +  w[8]
 
         loss = 0.5 *(y_true - y)**2

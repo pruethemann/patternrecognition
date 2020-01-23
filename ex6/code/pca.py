@@ -32,7 +32,7 @@ class PCA():
         plt.gca().axes.set_xlim([-5.5, 5.5])
         plt.gca().axes.set_ylim([-3, 8])
 
-
+    ## Pen and Paper version
     def pca_manuel(self, X: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         '''
         Compute PCA "manually" by using SVD
@@ -83,10 +83,10 @@ class PCA():
         self.mu = mu = np.mean(X, axis=1)
         X = (X.T - mu.T).T
 
-        ## 2. Calculate covariance matrix
-        #covariance = np.dot(X, X.T) / (ncols - 1)
+        ## 2. Calculate covariance matrix. (Not necessary here, because we take directly the data. But eigenvalues need to be normalized and squared
+        covariance = np.dot(X, X.T) / (ncols - 1)
 
-        covariance = np.cov(X, rowvar=True)  ## features in rows
+        #covariance = np.cov(X, rowvar=True)  ## features in rows
 
         ## 3. Perform singular value decomposition of covariance matrix
         # S: eigenvalues (Diagnonal matrix with eigenvalues)

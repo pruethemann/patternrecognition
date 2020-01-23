@@ -38,7 +38,7 @@ def svmKernelToyExample() -> None:
     plt.show()
 
     # TODO: Train svm
-    C = 1
+    C = None
     svm = SVM(C)
 
     ## possible kernels
